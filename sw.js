@@ -1,5 +1,5 @@
-/* BadCoach Live — Service Worker v2 */
-const CACHE = 'badcoach-v2';
+/* BadCoach Live — Service Worker v3 */
+const CACHE = 'badcoach-v3';
 const PRECACHE = [
   './BadCoachLive.html',
   './manifest.json',
