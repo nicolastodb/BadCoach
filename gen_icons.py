@@ -44,13 +44,19 @@ def draw_icon(size, maskable=False):
     lw  = max(2, int(sc(13, s)))
     d.ellipse([cx-cr, cy-cr, cx+cr, cy+cr], outline=ACCENT+(255,), width=lw)
 
-    # ── Plumes ──────────────────────────────────────────────
+    # ── Plumes (outer teal + nervure blanche intérieure) ────
     def pts(*coords):
         return [(sc(x, s), sc(y, s)) for x, y in zip(coords[::2], coords[1::2])]
 
-    d.polygon(pts(180,374, 70,62,  108,44,  200,366), fill=ACCENT+(255,))
-    d.polygon(pts(195,364, 180,40, 220,34,  230,364), fill=ACCENT+(255,))
-    d.polygon(pts(222,366, 272,46, 308,64,  246,376), fill=ACCENT+(255,))
+    # Plume gauche
+    d.polygon(pts(178,374, 62,58,  104,40,  198,366), fill=ACCENT+(255,))
+    d.polygon(pts(183,372, 71,64,   97,46,  194,368), fill=BG+(255,))
+    # Plume centrale
+    d.polygon(pts(194,364, 178,38, 220,32,  230,362), fill=ACCENT+(255,))
+    d.polygon(pts(199,362, 187,48, 213,42,  225,361), fill=BG+(255,))
+    # Plume droite
+    d.polygon(pts(222,366, 270,44, 310,62,  246,376), fill=ACCENT+(255,))
+    d.polygon(pts(227,367, 276,54, 301,66,  241,373), fill=BG+(255,))
 
     # ── Liège ────────────────────────────────────────────────
     lx, ly  = sc(176,s), sc(378,s)
