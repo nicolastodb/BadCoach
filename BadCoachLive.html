@@ -17,18 +17,18 @@
 <style>
 *,::before,::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --g:#00d472;--c:#00d4f0;--y:#f5b800;--r:#ff4444;--b:#3d8eff;--p:#c840f0;
-  --bg:rgba(8,14,28,.82);--bg2:rgba(8,14,28,.62);--border:rgba(255,255,255,.10);
-  --text:#e8edf8;--muted:rgba(200,215,240,.5);
+  --g:#5EC4D0;--c:#A8D8E0;--y:#F5C842;--r:#FF6B6B;--b:#6BBFCC;--p:#B8A0D8;
+  --bg:rgba(7,17,29,.82);--bg2:rgba(7,17,29,.62);--border:rgba(255,255,255,.10);
+  --text:#E8F2F5;--muted:rgba(168,210,220,.5);
   --fh:'Barlow Condensed',sans-serif;--fm:'JetBrains Mono',monospace;
   --blur:blur(14px) saturate(160%);
   --radius:14px;
   --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
 }
-html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-family:var(--fh);touch-action:manipulation}
+html,body{height:100%;overflow:hidden;background:#07111D;color:var(--text);font-family:var(--fh);touch-action:manipulation}
 
 /* ── FULL SCREEN STAGE ── */
-#stage{position:fixed;inset:0;background:#060b18}
+#stage{position:fixed;inset:0;background:#07111D}
 #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
 #overlay{position:absolute;inset:0;width:100%;height:100%}
 
@@ -45,7 +45,7 @@ html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-
 #scoreBox{
   margin-left:auto;
   font-size:26px;font-weight:800;letter-spacing:4px;color:var(--g);
-  text-shadow:0 0 14px rgba(0,212,114,.35);min-width:88px;text-align:center;
+  text-shadow:0 0 14px rgba(94,196,208,.35);min-width:88px;text-align:center;
   transition:opacity .15s;
 }
 #liveBadge{
@@ -53,7 +53,7 @@ html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-
   border-radius:5px;border:1px solid var(--border);color:var(--muted);background:var(--bg2);
   transition:all .25s;
 }
-#liveBadge.on{color:var(--g);border-color:rgba(0,212,114,.5);background:rgba(0,212,114,.1);animation:blink 1.6s ease-in-out infinite}
+#liveBadge.on{color:var(--g);border-color:rgba(94,196,208,.5);background:rgba(94,196,208,.1);animation:blink 1.6s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.55}}
 
 /* ── SHOT FLASH ── */
@@ -72,7 +72,7 @@ html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-
   margin-top:-60px;z-index:15;
   font-size:13px;font-weight:700;letter-spacing:2px;color:var(--c);
   font-family:var(--fm);opacity:0;transition:opacity .3s;pointer-events:none;
-  text-shadow:0 0 12px rgba(0,229,255,.6);
+  text-shadow:0 0 12px rgba(168,216,224,.6);
 }
 #rallyBadge.show{opacity:1}
 
@@ -104,10 +104,10 @@ html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-
 }
 .ctrl-btn:active{transform:scale(.93);background:rgba(255,255,255,.1);box-shadow:none}
 .ctrl-btn.primary{
-  background:rgba(0,212,114,.16);border-color:rgba(0,212,114,.55);color:var(--g);
-  box-shadow:0 2px 12px rgba(0,212,114,.18);
+  background:rgba(94,196,208,.16);border-color:rgba(94,196,208,.55);color:var(--g);
+  box-shadow:0 2px 12px rgba(94,196,208,.18);
 }
-.ctrl-btn.primary:active{background:rgba(0,212,114,.28)}
+.ctrl-btn.primary:active{background:rgba(94,196,208,.28)}
 .ctrl-btn.danger{background:rgba(255,68,68,.12);border-color:rgba(255,68,68,.45);color:var(--r)}
 .ctrl-icon{font-size:18px;line-height:1}
 
@@ -159,7 +159,7 @@ html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-
 /* ── LOADING ── */
 #loadScreen{
   position:fixed;inset:0;z-index:100;
-  background:radial-gradient(ellipse 80% 60% at 50% 60%,rgba(0,50,30,.45) 0%,#060b18 70%);
+  background:radial-gradient(ellipse 80% 60% at 50% 60%,rgba(0,40,60,.55) 0%,#07111D 70%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
 }
 #loadLogo{font-size:36px;font-weight:800;letter-spacing:4px;opacity:.95}
@@ -167,17 +167,17 @@ html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-
 #loadMsg{font-family:var(--fm);font-size:11px;color:var(--muted);letter-spacing:2px}
 .spinner{
   width:36px;height:36px;
-  border:2px solid rgba(0,212,114,.18);border-top-color:var(--g);
+  border:2px solid rgba(94,196,208,.18);border-top-color:var(--g);
   border-radius:50%;animation:spin .75s linear infinite
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 #startBtn{
-  padding:15px 36px;background:var(--g);color:#060b18;border:none;border-radius:10px;
+  padding:15px 36px;background:var(--g);color:#07111D;border:none;border-radius:10px;
   font-family:var(--fh);font-size:18px;font-weight:800;letter-spacing:2px;cursor:pointer;
   display:none;transition:transform .12s,box-shadow .12s;
-  box-shadow:0 4px 20px rgba(0,212,114,.35);
+  box-shadow:0 4px 20px rgba(94,196,208,.35);
 }
-#startBtn:active{transform:scale(.96);box-shadow:0 2px 8px rgba(0,212,114,.2)}
+#startBtn:active{transform:scale(.96);box-shadow:0 2px 8px rgba(94,196,208,.2)}
 
 /* ── HINT ── */
 #hint{
@@ -307,8 +307,8 @@ html,body{height:100%;overflow:hidden;background:#060b18;color:var(--text);font-
   position:absolute;top:calc(var(--safe-t)+50px);left:50%;transform:translateX(-50%);
   z-index:12;pointer-events:none;
   font-family:var(--fm);font-size:9px;letter-spacing:2px;
-  padding:3px 10px;border-radius:3px;border:1px solid rgba(0,230,118,.4);
-  background:rgba(0,230,118,.08);color:var(--g);
+  padding:3px 10px;border-radius:3px;border:1px solid rgba(94,196,208,.4);
+  background:rgba(94,196,208,.08);color:var(--g);
   opacity:0;transition:opacity .3s;
 }
 #calibBadge.show{opacity:1}
@@ -395,7 +395,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 #trainingPanel header h2{font-size:18px;font-weight:800;letter-spacing:3px;flex:1;color:var(--g)}
 .tp-body{padding:16px;flex:1}
 .tp-loading{text-align:center;padding:48px 16px;display:flex;flex-direction:column;align-items:center;gap:14px}
-.tp-spinner{width:32px;height:32px;border:2px solid rgba(0,230,118,.2);border-top-color:var(--g);
+.tp-spinner{width:32px;height:32px;border:2px solid rgba(94,196,208,.2);border-top-color:var(--g);
   border-radius:50%;animation:spin .8s linear infinite}
 .tp-msg{font-family:var(--fm);font-size:11px;color:var(--muted);letter-spacing:2px}
 .tp-exercise{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;
@@ -405,7 +405,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 .tp-ex-body{font-size:12px;line-height:1.7;color:var(--muted)}
 .tp-ex-meta{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
 .tp-ex-badge{font-family:var(--fm);font-size:10px;padding:2px 8px;border-radius:4px;
-  background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);color:var(--g)}
+  background:rgba(94,196,208,.1);border:1px solid rgba(94,196,208,.25);color:var(--g)}
 .tp-intro{font-size:13px;line-height:1.7;color:var(--muted);margin-bottom:16px;
   padding:12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border)}
 .tp-error{color:var(--r);text-align:center;padding:24px;font-family:var(--fm);font-size:11px}
@@ -427,7 +427,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 /* ── SCORE EDIT MODAL ── */
 #scoreEditModal{
   position:absolute;top:calc(var(--safe-t)+60px);left:50%;transform:translateX(-50%);
-  z-index:55;background:rgba(5,7,15,.97);border:1px solid rgba(0,230,118,.3);
+  z-index:55;background:rgba(5,7,15,.97);border:1px solid rgba(94,196,208,.3);
   border-radius:14px;padding:14px 18px 12px;display:none;flex-direction:column;align-items:center;gap:10px;
   box-shadow:0 8px 32px rgba(0,0,0,.6);
 }
@@ -447,10 +447,10 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 .sem-btn:active{background:rgba(255,255,255,.18);transform:scale(.92)}
 .sem-close{
   font-family:var(--fh);font-size:13px;font-weight:700;letter-spacing:1.5px;
-  padding:8px 20px;background:rgba(0,230,118,.15);border:1px solid rgba(0,230,118,.35);
+  padding:8px 20px;background:rgba(94,196,208,.15);border:1px solid rgba(94,196,208,.35);
   border-radius:8px;color:var(--g);cursor:pointer;transition:all .1s;
 }
-.sem-close:active{background:rgba(0,230,118,.3)}
+.sem-close:active{background:rgba(94,196,208,.3)}
 /* scoreBox cliquable */
 #scoreBox{cursor:pointer;transition:opacity .15s}
 #scoreBox:active{opacity:.7}
@@ -458,7 +458,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 /* ══ VIDEO UPLOAD MODE ═══════════════════════════════════ */
 #sourceScreen{
   position:fixed;inset:0;z-index:102;
-  background:radial-gradient(ellipse 80% 55% at 50% 55%,rgba(0,50,28,.4) 0%,#060b18 65%);
+  background:radial-gradient(ellipse 80% 55% at 50% 55%,rgba(0,40,60,.5) 0%,#07111D 65%);
   display:none;flex-direction:column;align-items:center;justify-content:center;
   gap:0;padding:24px;
 }
@@ -473,7 +473,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
   transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 12px rgba(0,0,0,.3);
 }
 .src-card:active{transform:scale(.96);box-shadow:none}
-.src-card.cam{border-color:rgba(0,212,114,.3);background:rgba(0,212,114,.04)}
+.src-card.cam{border-color:rgba(94,196,208,.3);background:rgba(94,196,208,.04)}
 .src-card.vid{border-color:rgba(61,142,255,.3);background:rgba(61,142,255,.04)}
 .src-card-icon{font-size:36px;margin-bottom:10px}
 .src-card-title{font-size:16px;font-weight:800;letter-spacing:2px;margin-bottom:4px}
@@ -513,7 +513,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
   border-radius:5px;cursor:pointer;color:var(--text);transition:all .15s;white-space:nowrap;
 }
 .vpb-btn:active{background:rgba(255,255,255,.2)}
-.vpb-btn.on{border-color:var(--g);color:var(--g);background:rgba(0,230,118,.1)}
+.vpb-btn.on{border-color:var(--g);color:var(--g);background:rgba(94,196,208,.1)}
 #videoModeBadge{
   position:absolute;top:calc(var(--safe-t)+60px);left:50%;transform:translateX(-50%);
   z-index:13;pointer-events:none;font-family:var(--fm);font-size:9px;letter-spacing:2px;
@@ -524,7 +524,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 
 #summaryScreen{
   position:fixed;inset:0;z-index:80;
-  background:linear-gradient(180deg,#07101f 0%,#060b18 100%);
+  background:linear-gradient(180deg,#071520 0%,#07111D 100%);
   display:none;flex-direction:column;
   overflow:hidden;
 }
@@ -550,7 +550,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 }
 #sumScoreNum{
   font-size:62px;font-weight:800;letter-spacing:6px;color:var(--g);
-  line-height:1;text-shadow:0 0 28px rgba(0,212,114,.28);
+  line-height:1;text-shadow:0 0 28px rgba(94,196,208,.28);
 }
 #sumScoreLabel{
   font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:6px;
@@ -602,7 +602,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 
 /* Insight card */
 .sum-insight{
-  background:rgba(0,212,114,.06);border:1px solid rgba(0,212,114,.18);
+  background:rgba(94,196,208,.06);border:1px solid rgba(94,196,208,.18);
   border-radius:12px;padding:14px;margin-bottom:10px;
   font-size:13px;line-height:1.75;color:var(--text);
 }
@@ -624,7 +624,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
   transition:transform .12s,box-shadow .12s;
 }
 .sum-btn:active{transform:scale(.97)}
-.sum-btn.primary{background:var(--g);color:#060b18;box-shadow:0 3px 16px rgba(0,212,114,.3)}
+.sum-btn.primary{background:var(--g);color:#07111D;box-shadow:0 3px 16px rgba(94,196,208,.3)}
 .sum-btn.secondary{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border)}
 </style>
 </head>
@@ -822,7 +822,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
       <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--b)" id="skStepsJ2">—</div><div class="sum-kpi-lbl">Pas J2</div></div>
     </div>
     <!-- Calib badge summary -->
-    <div id="skCalibRow" style="display:none;margin-bottom:14px;padding:8px 12px;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.2);border-radius:8px;font-family:var(--fm);font-size:10px;color:var(--g);letter-spacing:1px">
+    <div id="skCalibRow" style="display:none;margin-bottom:14px;padding:8px 12px;background:rgba(94,196,208,.07);border:1px solid rgba(94,196,208,.2);border-radius:8px;font-family:var(--fm);font-size:10px;color:var(--g);letter-spacing:1px">
       📐 Session avec terrain calibré — zones en coordonnées réelles
     </div>
 
@@ -861,7 +861,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 <!-- Summary fixed actions -->
 <div id="sumActions">
   <button class="sum-btn primary" id="sumShareBtn" onclick="shareSummary()">📤 PARTAGER EN IMAGE</button>
-  <button class="sum-btn secondary" onclick="openTraining()" style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);color:var(--g)">🧠 PLAN D'ENTRAÎNEMENT IA</button>
+  <button class="sum-btn secondary" onclick="openTraining()" style="background:rgba(94,196,208,.1);border:1px solid rgba(94,196,208,.3);color:var(--g)">🧠 PLAN D'ENTRAÎNEMENT IA</button>
   <button class="sum-btn secondary" onclick="newSession()">↺ NOUVELLE SESSION</button>
 </div>
 
@@ -931,7 +931,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
   <div class="sp-section">Détection</div>
   <div class="sp-row">
     <div><div class="sp-lbl">Squelette MoveNet</div><div class="sp-sub">17 keypoints : pieds, bassin, raquette</div></div>
-    <div style="font-family:var(--fm);font-size:9px;color:var(--g);letter-spacing:1px;padding:4px 8px;background:rgba(0,230,118,.1);border-radius:6px">ACTIF</div>
+    <div style="font-family:var(--fm);font-size:9px;color:var(--g);letter-spacing:1px;padding:4px 8px;background:rgba(94,196,208,.1);border-radius:6px">ACTIF</div>
   </div>
   <div class="sp-row">
     <div><div class="sp-lbl">Filtre de Kalman</div><div class="sp-sub">Lisse la trajectoire du volant</div></div>
@@ -1031,12 +1031,12 @@ const CFG = {
   STEP_COOLDOWN:  5,     // Frames minimum entre deux pas
   SHOT_MIN_SPD:   8,
   SHOT_COOLDOWN:  12,    // Frames entre deux frappes
-  C_P1: '#00e676',
-  C_P2: '#3d8eff',
-  C_SH: '#00e5ff',
-  C_NET:'#ffc400',
-  C_FOOT:'#ffeb3b', // couleur pieds
-  C_WRIST:'#ff4081', // couleur poignet raquette
+  C_P1: '#5EC4D0',
+  C_P2: '#F5C842',
+  C_SH: '#D6F0F5',
+  C_NET:'#87BFCA',
+  C_FOOT:'#F5C842', // couleur pieds
+  C_WRIST:'#FF9C7A', // couleur poignet raquette
 };
 
 // Connexions du squelette MoveNet (17 keypoints)
@@ -1051,7 +1051,7 @@ const SKEL_CONN = [
   [11,13],[13,15],[12,14],[14,16],   // jambes
 ];
 
-const SHOT_CSS = {smash:'#ff4444',dégagé:'#00e676',amorti:'#3d8eff',drive:'#ffc400',service:'#d500f9',inconnu:'rgba(255,255,255,.5)'};
+const SHOT_CSS = {smash:'#FF6B6B',dégagé:'#5EC4D0',amorti:'#6BBFCC',drive:'#F5C842',service:'#B8A0D8',inconnu:'rgba(200,220,225,.45)'};
 const SHOT_LBL = {smash:'SMASH',dégagé:'DÉGAGÉ',amorti:'AMORTI',drive:'DRIVE',service:'SERVICE',inconnu:'?'};
 const ZONES_GRID = [
   ['fG','fC','fD'],
@@ -1113,7 +1113,7 @@ const calib = {
 };
 // Ordre des 4 coins : fond-gauche, fond-droit, filet-gauche, filet-droit
 const CALIB_LABELS  = ['FOND GAUCHE','FOND DROIT','FILET GAUCHE','FILET DROIT'];
-const CALIB_COLORS  = ['#00e676','#3d8eff','#ffc400','#ff4444'];
+const CALIB_COLORS  = ['#5EC4D0','#6BBFCC','#F5C842','#FF6B6B'];
 // Points correspondants dans le terrain normalisé [0,1]²
 const TERRAIN_NORM  = [[0,0],[1,0],[0,1],[1,1]];
 
@@ -1237,7 +1237,7 @@ function showCameraError(noAPI, notSecure){
   // Bouton pour ouvrir le fichier via AirDrop / instructions
   const helpBtn=document.createElement('button');
   helpBtn.id='startBtn';
-  helpBtn.style.cssText='padding:12px 24px;background:rgba(0,230,118,.15);color:#00e676;border:1px solid #00e676;border-radius:8px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;cursor:pointer;margin-top:12px;display:block';
+  helpBtn.style.cssText='padding:12px 24px;background:rgba(94,196,208,.15);color:#5EC4D0;border:1px solid #5EC4D0;border-radius:8px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;cursor:pointer;margin-top:12px;display:block';
   helpBtn.textContent='VOIR LES INSTRUCTIONS';
   helpBtn.onclick=()=>showInstructions();
   document.getElementById('loadScreen').appendChild(helpBtn);
@@ -1247,9 +1247,9 @@ function showInstructions(){
   const screen=document.getElementById('loadScreen');
   screen.innerHTML=`
   <div style="padding:24px;max-width:340px;text-align:center;font-family:Barlow Condensed,sans-serif">
-    <div style="font-size:28px;font-weight:800;letter-spacing:3px;margin-bottom:20px">BAD<em style="color:#00e676;font-style:normal">COACH</em></div>
-    <div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:10px;padding:16px;margin-bottom:14px;text-align:left">
-      <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676;margin-bottom:10px">✅ MÉTHODE 1 — AIRDROP (recommandé)</div>
+    <div style="font-size:28px;font-weight:800;letter-spacing:3px;margin-bottom:20px">BAD<em style="color:#5EC4D0;font-style:normal">COACH</em></div>
+    <div style="background:rgba(94,196,208,.08);border:1px solid rgba(94,196,208,.3);border-radius:10px;padding:16px;margin-bottom:14px;text-align:left">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#5EC4D0;margin-bottom:10px">✅ MÉTHODE 1 — AIRDROP (recommandé)</div>
       <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:2">
         1. Envoie ce fichier HTML par <b style="color:#fff">AirDrop</b> sur ton iPhone<br>
         2. Ouvre-le avec <b style="color:#fff">Safari</b><br>
@@ -1475,7 +1475,7 @@ function renderCalibCanvas(){
   const pts=calib.points;
   // Polygone
   if(pts.length>=2){
-    ctx.strokeStyle='rgba(0,230,118,.4)'; ctx.lineWidth=1.5; ctx.setLineDash([8,5]);
+    ctx.strokeStyle='rgba(94,196,208,.4)'; ctx.lineWidth=1.5; ctx.setLineDash([8,5]);
     ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
     for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
     if(pts.length===4) ctx.closePath();
@@ -1931,14 +1931,14 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
   const pts=shuttle.trail.filter(Boolean);
   for(let i=1;i<pts.length;i++){
     const a=i/pts.length;
-    ctx.strokeStyle=`rgba(0,229,255,${a*.7})`;
+    ctx.strokeStyle=`rgba(168,216,224,${a*.7})`;
     ctx.lineWidth=a*3;
     ctx.beginPath(); ctx.moveTo(pts[i-1][0],pts[i-1][1]); ctx.lineTo(pts[i][0],pts[i][1]); ctx.stroke();
   }
 
   // ── Trajectoire prédite (pointillés) ──────────────────
   if(shuttle.traj&&shuttle.traj.pred&&shuttlePos){
-    ctx.strokeStyle='rgba(0,229,255,.3)';
+    ctx.strokeStyle='rgba(168,216,224,.3)';
     ctx.lineWidth=1.5;
     ctx.setLineDash([4,5]);
     ctx.beginPath();
@@ -1958,7 +1958,7 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
     // Phase + angle
     if(shuttle.traj){
       const phaseIcon={'MONTÉE':'↑','DESCENTE':'↓','FLAT':'→'}[shuttle.traj.phase]||'';
-      ctx.fillStyle='rgba(0,229,255,.9)';
+      ctx.fillStyle='rgba(168,216,224,.9)';
       ctx.font='bold 13px JetBrains Mono,monospace';
       ctx.textAlign='center';
       ctx.fillText(`${phaseIcon} ${shuttle.traj.angle}°`,shuttlePos[0],shuttlePos[1]-18);
@@ -2397,7 +2397,7 @@ function drawCourt(svgId,counts){
   svg.appendChild(makeSVGEl('rect',{x:0,y:0,width:110,height:148,fill:'rgba(255,255,255,.04)',rx:4}));
   ZONES_GRID.forEach((row,ri)=>row.forEach((z,ci)=>{
     const v=(counts[z]||0)/max;
-    svg.appendChild(makeSVGEl('rect',{x:ci*cw,y:ri*ch,width:cw,height:ch,fill:`rgba(0,230,118,${.04+v*.8})`}));
+    svg.appendChild(makeSVGEl('rect',{x:ci*cw,y:ri*ch,width:cw,height:ch,fill:`rgba(94,196,208,${.04+v*.8})`}));
     if(counts[z]>0){
       const t=makeSVGEl('text',{x:ci*cw+cw/2,y:ri*ch+ch/2+4,'text-anchor':'middle',
         fill:v>.5?'rgba(0,0,0,.8)':'rgba(255,255,255,.45)','font-size':'8','font-family':'JetBrains Mono'});
@@ -2429,7 +2429,7 @@ function toggleAnalysis(){
     if(!animId) animId=requestAnimationFrame(loop);
   } else {
     btn.innerHTML='<div class="ctrl-icon">▶</div>ANALYSER';
-    btn.style.background='rgba(0,230,118,.15)';
+    btn.style.background='rgba(94,196,208,.15)';
     btn.style.borderColor='var(--g)';
     btn.style.color='var(--g)';
     document.getElementById('liveBadge').className='';
@@ -2595,7 +2595,7 @@ function showToast(msg){
 
 const SHOT_COLORS_ARR = [
   {key:'smash',  lbl:'Smash',  col:'#ff4444'},
-  {key:'dégagé', lbl:'Dégagé', col:'#00e676'},
+  {key:'dégagé', lbl:'Dégagé', col:'#5EC4D0'},
   {key:'amorti', lbl:'Amorti', col:'#3d8eff'},
   {key:'drive',  lbl:'Drive',  col:'#ffc400'},
   {key:'inconnu',lbl:'Autre',  col:'rgba(255,255,255,.3)'},
@@ -2693,7 +2693,7 @@ function drawDonut(total){
   // Hole
   ctx.beginPath();
   ctx.arc(cx,cy,r,0,Math.PI*2);
-  ctx.fillStyle='#060810';
+  ctx.fillStyle='#061018';
   ctx.fill();
 
   // Centre text
@@ -2742,7 +2742,7 @@ function drawRallyTimeline(){
     const y=PAD+i*(BAR_H+GAP);
     const pct=(parseFloat(r.dur)||0)/maxDur;
     const bw=Math.max(4,(W-60)*pct);
-    const col=r.winner==='top'?'#00e676':'#3d8eff';
+    const col=r.winner==='top'?'#5EC4D0':'#F5C842';
 
     // Track
     ctx.fillStyle='rgba(255,255,255,.06)';
@@ -2836,7 +2836,7 @@ async function buildShareCanvas(){
 
   // Pass 1 : measure
   cvs.height=H;
-  ctx.fillStyle='#060810';
+  ctx.fillStyle='#061018';
   ctx.fillRect(0,0,W,H);
 
   // Header
@@ -2850,7 +2850,7 @@ async function buildShareCanvas(){
   ctx.font='bold 22px Barlow Condensed,sans-serif';
   ctx.textAlign='left'; ctx.textBaseline='top';
   ctx.fillText('BAD',PAD+42,PAD+2);
-  ctx.fillStyle='#00e676';
+  ctx.fillStyle='#5EC4D0';
   ctx.fillText('COACH',PAD+42+ctx.measureText('BAD').width,PAD+2);
 
 
@@ -2861,7 +2861,7 @@ async function buildShareCanvas(){
 
   // Score
   const scoreStr=`${rally.score.top}  —  ${rally.score.bot}`;
-  ctx.fillStyle='#00e676';
+  ctx.fillStyle='#5EC4D0';
   ctx.font='bold 72px Barlow Condensed,sans-serif';
   ctx.textAlign='center';
   ctx.fillText(scoreStr,W/2,60);
@@ -2879,7 +2879,7 @@ async function buildShareCanvas(){
 
   // KPI row
   const kpis=[
-    {v:total,l:'FRAPPES',c:'#00e676'},
+    {v:total,l:'FRAPPES',c:'#5EC4D0'},
     {v:rpm,l:'/ MIN',c:'#ffc400'},
     {v:rally.all.length,l:'ÉCHANGES',c:'#00e5ff'},
   ];
@@ -2918,7 +2918,7 @@ async function buildShareCanvas(){
   });
 
   // Insight
-  ctx.fillStyle='rgba(0,230,118,.15)';
+  ctx.fillStyle='rgba(94,196,208,.15)';
   ctx.beginPath(); ctx.roundRect(PAD,by+8,W-PAD*2,56,8); ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.8)';
   ctx.font='12px Barlow,sans-serif';
@@ -2937,7 +2937,7 @@ async function buildShareCanvas(){
   const cvs2=document.createElement('canvas');
   cvs2.width=W; cvs2.height=by+96;
   const ctx2=cvs2.getContext('2d');
-  ctx2.fillStyle='#060810'; ctx2.fillRect(0,0,W,cvs2.height);
+  ctx2.fillStyle='#061018'; ctx2.fillRect(0,0,W,cvs2.height);
   ctx2.drawImage(cvs,0,0);
   return cvs2;
 }
@@ -3651,7 +3651,7 @@ function stopVideoAnalysis(){
   vs.pause();
   const btn=document.getElementById('recBtn');
   btn.innerHTML='<div class="ctrl-icon">▶</div>ANALYSER';
-  btn.style.background='rgba(0,230,118,.15)';
+  btn.style.background='rgba(94,196,208,.15)';
   btn.style.borderColor='var(--g)';
   btn.style.color='var(--g)';
   document.getElementById('liveBadge').className='';
