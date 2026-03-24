@@ -1,9 +1,12 @@
-/* BadCoach Live — Service Worker v1 */
-const CACHE = 'badcoach-v1';
+/* BadCoach Live — Service Worker v2 */
+const CACHE = 'badcoach-v2';
 const PRECACHE = [
   './BadCoachLive.html',
   './manifest.json',
   './icons/icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', e => {
