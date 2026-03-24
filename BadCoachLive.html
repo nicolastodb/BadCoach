@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="BadCoach">
 <meta name="mobile-web-app-capable" content="yes">
-<title>BadCoach Live</title>
+<title>BadCoach</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
@@ -601,7 +601,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 
 <!-- ── SOURCE SELECTION SCREEN ── -->
 <div id="sourceScreen">
-  <div class="src-logo">BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+  <div class="src-logo">BAD<em>COACH</em></div>
   <div class="src-tagline">CHOISIR LA SOURCE</div>
   <div class="src-cards">
     <div class="src-card cam" onclick="chooseCamera()">
@@ -625,7 +625,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 
 <!-- ── LOADING SCREEN ── -->
 <div id="loadScreen">
-  <div id="loadLogo">BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+  <div id="loadLogo">BAD<em>COACH</em></div>
   <div class="spinner" id="spinner"></div>
   <div id="loadMsg">CHARGEMENT DU MODÈLE IA…</div>
   <button id="startBtn" onclick="showSourceScreen()">DÉMARRER</button>
@@ -644,7 +644,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 
   <!-- Top bar -->
   <div id="topbar">
-    <div class="logo">🏸 BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+    <div class="logo">🏸 BAD<em>COACH</em></div>
     <div id="liveBadge">EN ATTENTE</div>
     <div id="recIndicator"><div id="recDot"></div><span id="recDuration">00:00</span></div>
     <div id="scoreBox" onclick="openScoreEdit()" title="Tap pour modifier">0 — 0</div>
@@ -765,7 +765,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 <!-- ══ SUMMARY SCREEN ══════════════════════════════════════ -->
 <div id="summaryScreen">
   <div id="sumHeader">
-    <div id="sumHeaderLogo">BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+    <div id="sumHeaderLogo">BAD<em>COACH</em></div>
     <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted)">RÉSUMÉ</div>
     <div id="sumDate"></div>
   </div>
@@ -1190,7 +1190,7 @@ function showInstructions(){
   const screen=document.getElementById('loadScreen');
   screen.innerHTML=`
   <div style="padding:24px;max-width:340px;text-align:center;font-family:Barlow Condensed,sans-serif">
-    <div style="font-size:28px;font-weight:800;letter-spacing:3px;margin-bottom:20px">BAD<em style="color:#00e676;font-style:normal">COACH</em> <span style="font-size:.55em;letter-spacing:2px;color:rgba(255,255,255,.4)">LIVE</span></div>
+    <div style="font-size:28px;font-weight:800;letter-spacing:3px;margin-bottom:20px">BAD<em style="color:#00e676;font-style:normal">COACH</em></div>
     <div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:10px;padding:16px;margin-bottom:14px;text-align:left">
       <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676;margin-bottom:10px">✅ MÉTHODE 1 — AIRDROP (recommandé)</div>
       <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:2">
@@ -2473,7 +2473,7 @@ async function shareSummary(){
       const file=new File([blob],'BadCoachLive_Resume.png',{type:'image/png'});
       if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
         try{
-          await navigator.share({files:[file],title:'BadCoach Live — Résumé de session'});
+          await navigator.share({files:[file],title:'BadCoach — Résumé de session'});
         }catch(e){ if(e.name!=='AbortError') downloadBlob(blob); }
       } else {
         downloadBlob(blob);
@@ -2516,9 +2516,7 @@ async function buildShareCanvas(){
   ctx.fillText('BAD',PAD+42,PAD+2);
   ctx.fillStyle='#00e676';
   ctx.fillText('COACH',PAD+42+ctx.measureText('BAD').width,PAD+2);
-  ctx.fillStyle='rgba(255,255,255,.4)';
-  ctx.font='11px JetBrains Mono,monospace';
-  ctx.fillText('LIVE',PAD+42,PAD+26);
+
 
   ctx.fillStyle='rgba(255,255,255,.3)';
   ctx.font='11px JetBrains Mono,monospace';

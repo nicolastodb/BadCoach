@@ -1,5 +1,5 @@
 {
-  "name": "BadCoach Live",
+  "name": "BadCoach",
   "short_name": "BadCoach",
   "description": "Analyse tactique badminton en temps réel",
   "start_url": "./BadCoachLive.html",

@@ -37,12 +37,4 @@
     text-orientation="upright"
     letter-spacing="2">COACH</text>
 
-  <!-- ── LIVE horizontal ── -->
-  <text
-    x="334" y="454"
-    font-family="Arial,'Helvetica Neue',sans-serif"
-    font-size="34" font-weight="600"
-    fill="#87BFCA"
-    letter-spacing="6">LIVE</text>
-
 </svg>

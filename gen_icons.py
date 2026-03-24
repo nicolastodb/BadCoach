@@ -78,13 +78,6 @@ def draw_icon(size, maskable=False, opaque=False):
                ch, font=fnt_c, fill=ACCENT)
         y_c += ch_h + max(1, int(scale(4, s)))
 
-    # ── Texte LIVE (horizontal) ────────────────────────────
-    fs_l  = max(6, int(scale(34, s)))
-    fnt_l = font(FONT_REG, fs_l)
-    bb_l  = d.textbbox((0,0), 'LIVE', font=fnt_l)
-    d.text((scale(334, s) - bb_l[0], scale(454, s) - bb_l[1]),
-           'LIVE', font=fnt_l, fill=ACCENT)
-
     if opaque:
         return img
     # Composite sur fond blanc pour exports non-transparents (iOS)
