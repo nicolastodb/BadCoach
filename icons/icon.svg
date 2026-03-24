@@ -1,39 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+
   <!-- Background -->
-  <rect width="512" height="512" rx="90" fill="#0a1628"/>
+  <rect width="512" height="512" rx="88" fill="#F4F6F7"/>
 
-  <!-- Decorative accent line -->
-  <rect x="120" y="224" width="272" height="3" rx="1.5" fill="#00e676" opacity="0.4"/>
+  <!-- Accent color : #87BFCA -->
 
-  <!-- BAD — blanc -->
+  <!-- ── Cercle outline ── -->
+  <circle cx="208" cy="252" r="196" fill="none" stroke="#87BFCA" stroke-width="13"/>
+
+  <!-- ── Navette — plumes (3 trapèzes) ── -->
+  <!-- Plume gauche -->
+  <polygon fill="#87BFCA"
+    points="180,374 70,62 108,44 200,366"/>
+  <!-- Plume centrale -->
+  <polygon fill="#87BFCA"
+    points="195,364 180,40 220,34 230,364"/>
+  <!-- Plume droite -->
+  <polygon fill="#87BFCA"
+    points="222,366 272,46 308,64 246,376"/>
+
+  <!-- ── Navette — liège ── -->
+  <!-- Corps rectangulaire -->
+  <rect fill="#87BFCA" x="176" y="378" width="72" height="35" rx="5"/>
+  <!-- Ligne séparatrice blanche -->
+  <rect fill="#F4F6F7" x="176" y="391" width="72" height="7"/>
+  <!-- Dôme bas -->
+  <ellipse fill="#87BFCA" cx="212" cy="413" rx="36" ry="19"/>
+
+  <!-- ── COACH vertical ── -->
   <text
-    x="256" y="210"
-    font-family="'Arial Black','Impact','Franklin Gothic Heavy',sans-serif"
-    font-size="148" font-weight="900"
-    fill="#ffffff"
-    text-anchor="middle"
-    letter-spacing="14"
-    textLength="400" lengthAdjust="spacingAndGlyphs"
-  >BAD</text>
+    x="386" y="94"
+    font-family="'Arial Black','Franklin Gothic Heavy',Impact,sans-serif"
+    font-size="72" font-weight="900"
+    fill="#87BFCA"
+    writing-mode="vertical-rl"
+    text-orientation="upright"
+    letter-spacing="2">COACH</text>
 
-  <!-- COACH — vert -->
+  <!-- ── LIVE horizontal ── -->
   <text
-    x="256" y="368"
-    font-family="'Arial Black','Impact','Franklin Gothic Heavy',sans-serif"
-    font-size="148" font-weight="900"
-    fill="#00e676"
-    text-anchor="middle"
-    letter-spacing="6"
-    textLength="400" lengthAdjust="spacingAndGlyphs"
-  >COACH</text>
+    x="334" y="454"
+    font-family="Arial,'Helvetica Neue',sans-serif"
+    font-size="34" font-weight="600"
+    fill="#87BFCA"
+    letter-spacing="6">LIVE</text>
 
-  <!-- LIVE — petit, muted -->
-  <text
-    x="256" y="432"
-    font-family="'Courier New', monospace"
-    font-size="32" font-weight="400"
-    fill="rgba(255,255,255,0.35)"
-    text-anchor="middle"
-    letter-spacing="10"
-  >LIVE</text>
 </svg>
