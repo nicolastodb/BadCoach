@@ -787,6 +787,8 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
       <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--b)" id="skAvgRally">—</div><div class="sum-kpi-lbl">Durée moy.</div></div>
       <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--p)" id="skServeTop">0</div><div class="sum-kpi-lbl">Services J1</div></div>
       <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--p)" id="skServeBot">0</div><div class="sum-kpi-lbl">Services J2</div></div>
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--g)" id="skStepsJ1">—</div><div class="sum-kpi-lbl">Pas J1</div></div>
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--b)" id="skStepsJ2">—</div><div class="sum-kpi-lbl">Pas J2</div></div>
     </div>
     <!-- Calib badge summary -->
     <div id="skCalibRow" style="display:none;margin-bottom:14px;padding:8px 12px;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.2);border-radius:8px;font-family:var(--fm);font-size:10px;color:var(--g);letter-spacing:1px">
@@ -851,9 +853,9 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
     </div>
 
     <div class="dcard">
-      <div class="dcard-t">Joueurs détectés</div>
-      <div class="mrow"><span class="ml" style="color:var(--g)">Joueur 1</span><span class="mv" style="color:var(--g)" id="dp1">—</span></div>
-      <div class="mrow"><span class="ml" style="color:var(--b)">Joueur 2</span><span class="mv" style="color:var(--b)" id="dp2">—</span></div>
+      <div class="dcard-t">Joueurs — Squelette</div>
+      <div class="mrow"><span class="ml" style="color:var(--g)">J1 vit·pas·zone</span><span class="mv" style="color:var(--g);font-size:10px" id="dp1">—</span></div>
+      <div class="mrow"><span class="ml" style="color:var(--b)">J2 vit·pas·zone</span><span class="mv" style="color:var(--b);font-size:10px" id="dp2">—</span></div>
       <div class="mrow"><span class="ml">Volant</span><span class="mv" id="dShuttle">—</span></div>
       <div class="mrow"><span class="ml" style="color:var(--p)">Services J1 / J2</span><span class="mv" style="color:var(--p)" id="dServes">0 / 0</span></div>
       <div class="mrow"><span class="ml">Terrain calibré</span><span class="mv" id="dCalib">—</span></div>
@@ -896,6 +898,10 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
   </div>
 
   <div class="sp-section">Détection</div>
+  <div class="sp-row">
+    <div><div class="sp-lbl">Squelette MoveNet</div><div class="sp-sub">17 keypoints : pieds, bassin, raquette</div></div>
+    <div style="font-family:var(--fm);font-size:9px;color:var(--g);letter-spacing:1px;padding:4px 8px;background:rgba(0,230,118,.1);border-radius:6px">ACTIF</div>
+  </div>
   <div class="sp-row">
     <div><div class="sp-lbl">Filtre de Kalman</div><div class="sp-sub">Lisse la trajectoire du volant</div></div>
     <div class="sp-toggle on" id="togKalman" onclick="spToggle('kalman',this)"></div>
@@ -958,9 +964,9 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
   </div>
 </div>
 
-<!-- TF.js + COCO-SSD -->
+<!-- TF.js + MoveNet Pose Detection -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
 
 <script>
 // ══════════════════════════════════════════════════════════
@@ -988,14 +994,31 @@ const CFG = {
   SHUTTLE_MIN_R:  2,
   SHUTTLE_MAX_R:  20,
   TRAIL_LEN:      28,
-  YOLO_EVERY:     6,     // Détecte les joueurs tous les N frames
+  POSE_EVERY:     3,     // Détecte le squelette tous les N frames
+  POSE_SCORE:     0.25,  // Score minimum keypoint MoveNet
+  STEP_THRESH:    12,    // Déplacement cheville (px) pour compter un pas
+  STEP_COOLDOWN:  5,     // Frames minimum entre deux pas
   SHOT_MIN_SPD:   8,
   SHOT_COOLDOWN:  12,    // Frames entre deux frappes
   C_P1: '#00e676',
   C_P2: '#3d8eff',
   C_SH: '#00e5ff',
   C_NET:'#ffc400',
+  C_FOOT:'#ffeb3b', // couleur pieds
+  C_WRIST:'#ff4081', // couleur poignet raquette
 };
+
+// Connexions du squelette MoveNet (17 keypoints)
+// 0:nez 1:oeil_g 2:oeil_d 3:oreille_g 4:oreille_d
+// 5:épaule_g 6:épaule_d 7:coude_g 8:coude_d 9:poignet_g 10:poignet_d
+// 11:hanche_g 12:hanche_d 13:genou_g 14:genou_d 15:cheville_g 16:cheville_d
+const SKEL_CONN = [
+  [0,1],[0,2],[1,3],[2,4],           // tête
+  [5,6],                             // épaules
+  [5,7],[7,9],[6,8],[8,10],          // bras
+  [5,11],[6,12],[11,12],             // torse
+  [11,13],[13,15],[12,14],[14,16],   // jambes
+];
 
 const SHOT_CSS = {smash:'#ff4444',dégagé:'#00e676',amorti:'#3d8eff',drive:'#ffc400',service:'#d500f9',inconnu:'rgba(255,255,255,.5)'};
 const SHOT_LBL = {smash:'SMASH',dégagé:'DÉGAGÉ',amorti:'AMORTI',drive:'DRIVE',service:'SERVICE',inconnu:'?'};
@@ -1091,11 +1114,14 @@ async function init(){
     return;
   }
 
-  // ── Chargement du modèle IA ──────────────────────────────
-  document.getElementById('loadMsg').textContent='CHARGEMENT DU MODÈLE IA…';
+  // ── Chargement du modèle IA (MoveNet MULTIPOSE) ─────────
+  document.getElementById('loadMsg').textContent='CHARGEMENT MOVENET…';
   try{
-    model = await cocoSsd.load({base:'lite_mobilenet_v2'});
-    document.getElementById('loadMsg').textContent='MODÈLE PRÊT ✓';
+    model = await poseDetection.createDetector(
+      poseDetection.SupportedModels.MoveNet,
+      { modelType: poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING }
+    );
+    document.getElementById('loadMsg').textContent='SQUELETTE PRÊT ✓';
   }catch(e){
     document.getElementById('loadMsg').textContent='MODE VISION CLASSIQUE';
     model=null;
@@ -1692,56 +1718,83 @@ function checkBounce(){
 }
 
 // ══════════════════════════════════════════════════════════
-//  PUPPET DRAWING
+//  SKELETON DRAWING (MoveNet keypoints réels)
 // ══════════════════════════════════════════════════════════
-function drawPuppet(ctx, x, y, w, h, col){
-  const cx    = x + w/2;
-  const lw    = Math.max(2, w * 0.045);
-  ctx.strokeStyle = col;
-  ctx.lineWidth   = lw;
-  ctx.lineCap     = 'round';
-  ctx.lineJoin    = 'round';
+function drawSkeleton(ctx, kps, col){
+  if(!kps || kps.length < 17) return;
+  const S = CFG.POSE_SCORE;
 
-  // Tête
-  const headR  = h * 0.095;
-  const headCy = y + headR + h * 0.02;
-  ctx.beginPath(); ctx.arc(cx, headCy, headR, 0, Math.PI*2); ctx.stroke();
+  // ── Connexions ─────────────────────────────────────────
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  SKEL_CONN.forEach(([a,b])=>{
+    const ka = kps[a], kb = kps[b];
+    if(!ka || !kb || ka.score < S || kb.score < S) return;
+    ctx.strokeStyle = col + 'bb';
+    ctx.lineWidth   = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(ka.x, ka.y);
+    ctx.lineTo(kb.x, kb.y);
+    ctx.stroke();
+  });
 
-  // Points clés
-  const neckY  = headCy + headR;
-  const sY     = neckY  + h * 0.07;   // épaules
-  const sW     = w * 0.35;
-  const hipY   = y + h  * 0.60;
-  const elbowY = sY     + h * 0.17;
-  const handY  = sY     + h * 0.33;
-  const kneeY  = hipY   + h * 0.22;
-  const footY  = y + h;
+  // ── Articulations neutres ──────────────────────────────
+  kps.forEach((kp, i)=>{
+    if(!kp || kp.score < S) return;
+    // sauter les points de la tête (moins pertinents au badminton)
+    if(i <= 4) return;
+    ctx.fillStyle = col + '99';
+    ctx.beginPath();
+    ctx.arc(kp.x, kp.y, 3, 0, Math.PI*2);
+    ctx.fill();
+  });
 
-  // Torse
-  ctx.beginPath(); ctx.moveTo(cx,neckY); ctx.lineTo(cx,hipY); ctx.stroke();
+  // ── Pieds (chevilles) ─────────────────────────────────
+  [15, 16].forEach(i=>{
+    const kp = kps[i];
+    if(!kp || kp.score < S) return;
+    ctx.fillStyle   = CFG.C_FOOT;
+    ctx.strokeStyle = '#000000aa';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.arc(kp.x, kp.y, 6, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+  });
 
-  // Ceinture épaules
-  ctx.beginPath(); ctx.moveTo(cx-sW,sY); ctx.lineTo(cx+sW,sY); ctx.stroke();
+  // ── Bassin (milieu hanches) ────────────────────────────
+  const lh = kps[11], rh = kps[12];
+  if(lh && rh && lh.score >= S && rh.score >= S){
+    const px = (lh.x + rh.x) / 2, py = (lh.y + rh.y) / 2;
+    ctx.fillStyle   = col;
+    ctx.strokeStyle = '#000000aa';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.arc(px, py, 5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+  }
 
-  // Bras gauche (elbow break)
-  ctx.beginPath();
-  ctx.moveTo(cx-sW,sY); ctx.lineTo(cx-w*.44,elbowY); ctx.lineTo(cx-w*.36,handY);
-  ctx.stroke();
-
-  // Bras droit
-  ctx.beginPath();
-  ctx.moveTo(cx+sW,sY); ctx.lineTo(cx+w*.44,elbowY); ctx.lineTo(cx+w*.36,handY);
-  ctx.stroke();
-
-  // Jambe gauche
-  ctx.beginPath();
-  ctx.moveTo(cx-w*.10,hipY); ctx.lineTo(cx-w*.22,kneeY); ctx.lineTo(cx-w*.17,footY);
-  ctx.stroke();
-
-  // Jambe droite
-  ctx.beginPath();
-  ctx.moveTo(cx+w*.10,hipY); ctx.lineTo(cx+w*.22,kneeY); ctx.lineTo(cx+w*.17,footY);
-  ctx.stroke();
+  // ── Poignet raquette (droite=10 par défaut) ───────────
+  // On choisit le poignet avec le score le plus élevé
+  const lw9 = kps[9], rw10 = kps[10];
+  const racketKp = (rw10 && lw9)
+    ? (rw10.score >= lw9.score ? rw10 : lw9)
+    : (rw10 || lw9);
+  if(racketKp && racketKp.score >= S){
+    ctx.fillStyle   = CFG.C_WRIST;
+    ctx.strokeStyle = '#000000aa';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.arc(racketKp.x, racketKp.y, 8, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+    // Cercle raquette
+    ctx.strokeStyle = CFG.C_WRIST + '66';
+    ctx.lineWidth   = 1.5;
+    ctx.beginPath();
+    ctx.arc(racketKp.x, racketKp.y, 15, 0, Math.PI*2);
+    ctx.stroke();
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1777,21 +1830,60 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
     ctx.beginPath(); ctx.arc(shuttlePos[0],shuttlePos[1],3,0,Math.PI*2); ctx.fill();
   }
 
-  // ── Joueurs (mode marionnettes) ────────────────────────
+  // ── Joueurs (squelette MoveNet) ────────────────────────
   const colors=[CFG.C_P1,CFG.C_P2];
   detections.forEach((d,i)=>{
     if(!d||i>1) return;
-    const [x,y,w,h]=d.bbox; const col=colors[i];
-    drawPuppet(ctx,x,y,w,h,col);
-    ctx.fillStyle=col; ctx.font='bold 13px Barlow Condensed,sans-serif';
-    ctx.fillText(`J${i+1}`,x+w/2-8,y-6);
-    // Trail
-    const tr=players.list[i]?.trail||[];
-    for(let j=1;j<tr.length;j++){
-      const a=j/tr.length;
-      ctx.strokeStyle=`${col}${Math.round(a*99).toString(16).padStart(2,'0')}`;
+    const p=players.list[i];
+    if(!p) return;
+    const col=colors[i];
+
+    // Trail bassin (déplacement global)
+    const pelvisTr=p.pelvisTrail||[];
+    for(let j=1;j<pelvisTr.length;j++){
+      const a=j/pelvisTr.length;
+      ctx.strokeStyle=`${col}${Math.round(a*80).toString(16).padStart(2,'0')}`;
       ctx.lineWidth=a*2;
-      ctx.beginPath(); ctx.moveTo(tr[j-1][0],tr[j-1][1]); ctx.lineTo(tr[j][0],tr[j][1]); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(pelvisTr[j-1][0],pelvisTr[j-1][1]);
+      ctx.lineTo(pelvisTr[j][0],pelvisTr[j][1]);
+      ctx.stroke();
+    }
+
+    // Trail poignet raquette (rose)
+    const wTr=p.wristTrail||[];
+    for(let j=1;j<wTr.length;j++){
+      const a=j/wTr.length;
+      ctx.strokeStyle=`rgba(255,64,129,${a*.85})`;
+      ctx.lineWidth=a*2.5;
+      ctx.beginPath();
+      ctx.moveTo(wTr[j-1][0],wTr[j-1][1]);
+      ctx.lineTo(wTr[j][0],wTr[j][1]);
+      ctx.stroke();
+    }
+
+    // Squelette
+    if(p.keypoints){
+      drawSkeleton(ctx, p.keypoints, col);
+    }
+
+    // Label joueur (au-dessus du nez ou de la bbox)
+    const nose=p.keypoints?.[0];
+    const labelX=nose&&nose.score>=CFG.POSE_SCORE ? nose.x : (p.bbox?p.bbox[0]+p.bbox[2]/2:W/2);
+    const labelY=nose&&nose.score>=CFG.POSE_SCORE ? nose.y-20 : (p.bbox?p.bbox[1]-8:20);
+    ctx.fillStyle=col;
+    ctx.font='bold 13px Barlow Condensed,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(`J${i+1}`,labelX,labelY);
+    ctx.textAlign='left';
+
+    // Vitesse bassin (px/f affiché)
+    if(p.speed>0.5 && p.pelvis){
+      ctx.fillStyle=col+'cc';
+      ctx.font='10px JetBrains Mono,monospace';
+      ctx.textAlign='center';
+      ctx.fillText(`${p.speed.toFixed(1)}px/f`,labelX,labelY-14);
+      ctx.textAlign='left';
     }
   });
 
@@ -1855,62 +1947,110 @@ async function loop(){
   // ── Luminosité adaptative ─────────────────────────────
   updateAdaptiveBrightness(imageData,W,H);
 
-  // ── Player detection — matching stable + lissage EMA ─
+  // ── Pose detection MoveNet — squelette + métriques ────
   let detections=[];
-  if(model && frameIdx%CFG.YOLO_EVERY===0){
+  if(model && frameIdx%CFG.POSE_EVERY===0){
     try{
-      const preds = await model.detect(tmpCvs,2);
-      const raw   = preds.filter(p=>p.class==='person'&&p.score>.40)
-                         .sort((a,b)=>b.score-a.score).slice(0,2);
+      const poses = await model.estimatePoses(tmpCvs, {maxPoses:2, flipHorizontal:false, scoreThreshold:CFG.POSE_SCORE});
 
-      // Matching stable : associe chaque détection brute au slot joueur
-      // le plus proche (évite les inversions J1/J2 entre frames)
+      // Matching stable : associe chaque pose au slot joueur
+      // le plus proche via le centre du bassin (évite les inversions)
       const matched=[null,null];
       const used=new Set();
       for(let slot=0;slot<2;slot++){
         const prev=players.list[slot];
         if(!prev||prev.cx==null) continue;
         let best=-1, bestD=Infinity;
-        raw.forEach((d,ri)=>{
-          if(used.has(ri)) return;
-          const dx=d.bbox[0]+d.bbox[2]/2-prev.cx;
-          const dy=d.bbox[1]+d.bbox[3]/2-prev.cy;
-          const dist=Math.hypot(dx,dy);
-          if(dist<bestD){bestD=dist;best=ri;}
+        poses.forEach((pose,pi)=>{
+          if(used.has(pi)) return;
+          const kps=pose.keypoints;
+          const lh=kps[11], rh=kps[12];
+          const pcx=lh&&rh ? (lh.x+rh.x)/2 : (pose.box?(pose.box.xMin+pose.box.width/2):prev.cx);
+          const pcy=lh&&rh ? (lh.y+rh.y)/2 : (pose.box?(pose.box.yMin+pose.box.height/2):prev.cy);
+          const dist=Math.hypot(pcx-prev.cx, pcy-prev.cy);
+          if(dist<bestD){bestD=dist;best=pi;}
         });
-        if(best>=0){matched[slot]=raw[best];used.add(best);}
+        if(best>=0){matched[slot]=poses[best];used.add(best);}
       }
-      // Remplir les slots vides avec les détections restantes
-      raw.forEach((d,ri)=>{
-        if(used.has(ri)) return;
+      poses.forEach((pose,pi)=>{
+        if(used.has(pi)) return;
         const s=matched.findIndex(m=>m===null);
-        if(s>=0){matched[s]=d;used.add(ri);}
+        if(s>=0){matched[s]=pose;used.add(pi);}
       });
 
-      // EMA sur la bbox + mise à jour des joueurs
-      matched.forEach((d,i)=>{
-        if(!d) return;
-        if(!players.list[i]) players.list[i]={trail:[]};
+      // Mise à jour des joueurs avec les keypoints réels
+      matched.forEach((pose,i)=>{
+        if(!pose) return;
+        if(!players.list[i]) players.list[i]={pelvisTrail:[],wristTrail:[],trail:[],stepCount:0,_prevFeet:{},speed:0};
         const p=players.list[i];
-        if(p.bbox){
-          const a=.38;
-          d={...d, bbox:[
-            p.bbox[0]*(1-a)+d.bbox[0]*a,
-            p.bbox[1]*(1-a)+d.bbox[1]*a,
-            p.bbox[2]*(1-a)+d.bbox[2]*a,
-            p.bbox[3]*(1-a)+d.bbox[3]*a,
-          ]};
+        const kps=pose.keypoints;
+
+        // EMA légère sur les keypoints (alpha=0.45)
+        if(p.keypoints && p.keypoints.length===17){
+          kps.forEach((kp,ki)=>{
+            if(kp.score>=CFG.POSE_SCORE && p.keypoints[ki].score>=CFG.POSE_SCORE){
+              kp.x = p.keypoints[ki].x*.55 + kp.x*.45;
+              kp.y = p.keypoints[ki].y*.55 + kp.y*.45;
+            }
+          });
         }
-        p.bbox=d.bbox;
-        p.cx=d.bbox[0]+d.bbox[2]/2;
-        p.cy=d.bbox[1]+d.bbox[3]/2;
-        p.trail.push([p.cx,p.cy]);
-        if(p.trail.length>20) p.trail.shift();
-        const zone=getZoneCalib(p.cx,p.cy,W,H);
-        p.zone=zone;
-        zoneCounts[i+1]=zoneCounts[i+1]||{};
-        zoneCounts[i+1][zone]=(zoneCounts[i+1][zone]||0)+1;
+        p.keypoints=kps;
+
+        // Bbox depuis le box MoveNet
+        if(pose.box){
+          p.bbox=[pose.box.xMin, pose.box.yMin, pose.box.width, pose.box.height];
+        }
+
+        // ── Bassin (hanches) ────────────────────────────
+        const lh=kps[11], rh=kps[12];
+        if(lh&&rh&&lh.score>=CFG.POSE_SCORE&&rh.score>=CFG.POSE_SCORE){
+          const px=(lh.x+rh.x)/2, py=(lh.y+rh.y)/2;
+          if(p.pelvis) p.speed=Math.hypot(px-p.pelvis[0], py-p.pelvis[1]);
+          p.pelvis=[px,py];
+          p.cx=px; p.cy=py;
+          p.pelvisTrail.push([px,py]);
+          if(p.pelvisTrail.length>30) p.pelvisTrail.shift();
+          p.trail.push([px,py]);
+          if(p.trail.length>20) p.trail.shift();
+          // Zone heatmap depuis le bassin
+          const zone=getZoneCalib(px,py,W,H);
+          p.zone=zone;
+          zoneCounts[i+1]=zoneCounts[i+1]||{};
+          zoneCounts[i+1][zone]=(zoneCounts[i+1][zone]||0)+1;
+        } else if(p.bbox){
+          p.cx=p.bbox[0]+p.bbox[2]/2;
+          p.cy=p.bbox[1]+p.bbox[3]/2;
+        }
+
+        // ── Poignet raquette (dominant = score max) ─────
+        const lw9=kps[9], rw10=kps[10];
+        const racketKp=(rw10&&lw9)?(rw10.score>=lw9.score?rw10:lw9):(rw10||lw9);
+        if(racketKp&&racketKp.score>=CFG.POSE_SCORE){
+          p.racket=[racketKp.x, racketKp.y];
+          p.wristTrail.push([racketKp.x, racketKp.y]);
+          if(p.wristTrail.length>18) p.wristTrail.shift();
+        }
+
+        // ── Pieds (chevilles) + comptage de pas ─────────
+        const la=kps[15], ra=kps[16];
+        p.feet={
+          L: la&&la.score>=CFG.POSE_SCORE?[la.x,la.y]:null,
+          R: ra&&ra.score>=CFG.POSE_SCORE?[ra.x,ra.y]:null
+        };
+        [{kp:la,side:'L'},{kp:ra,side:'R'}].forEach(({kp,side})=>{
+          if(!kp||kp.score<CFG.POSE_SCORE) return;
+          const prev=p._prevFeet[side];
+          if(prev){
+            const d=Math.hypot(kp.x-prev[0], kp.y-prev[1]);
+            if(d>CFG.STEP_THRESH && (!p._lastStep||frameIdx-p._lastStep>CFG.STEP_COOLDOWN)){
+              p.stepCount++;
+              p._lastStep=frameIdx;
+            }
+          }
+          p._prevFeet[side]=[kp.x,kp.y];
+        });
       });
+
       players.lastDet=matched;
       detections=matched;
     }catch(e){}
@@ -2008,10 +2148,17 @@ function updateDetailUI(){
   document.getElementById('dRhythm').textContent=elapsed>5?(tot/(elapsed/60)).toFixed(1):'—';
   document.getElementById('dRallies').textContent=rally.all.length;
 
-  // Players
+  // Players — vitesse bassin + pas + zone
   const p1=players.list[0], p2=players.list[1];
-  document.getElementById('dp1').textContent=p1?p1.zone||'—':'Non détecté';
-  document.getElementById('dp2').textContent=p2?p2.zone||'—':'Non détecté';
+  const fmtPlayer=(p)=>{
+    if(!p||!p.keypoints) return 'Non détecté';
+    const spd=p.speed!=null?p.speed.toFixed(1):'—';
+    const steps=p.stepCount||0;
+    const zone=p.zone||'—';
+    return `${spd}px/f · ${steps} pas · ${zone}`;
+  };
+  document.getElementById('dp1').textContent=fmtPlayer(p1);
+  document.getElementById('dp2').textContent=fmtPlayer(p2);
   document.getElementById('dShuttle').textContent=shuttle.lastPos?`● ${shuttle.speed.toFixed(1)} px/f`:'○ Non visible';
   document.getElementById('dShuttle').style.color=shuttle.lastPos?'var(--c)':'var(--muted)';
   document.getElementById('dServes').textContent=`${serve.count.top} / ${serve.count.bot}`;
@@ -2296,6 +2443,8 @@ function showSummary(){
   document.getElementById('skAvgRally').textContent=avgDur;
   document.getElementById('skServeTop').textContent=serve.count.top;
   document.getElementById('skServeBot').textContent=serve.count.bot;
+  document.getElementById('skStepsJ1').textContent=players.list[0]?.stepCount||'—';
+  document.getElementById('skStepsJ2').textContent=players.list[1]?.stepCount||'—';
   document.getElementById('skCalibRow').style.display=calib.done?'block':'none';
 
   // ── Donut chart ──────────────────────────────────────────
@@ -2973,11 +3122,9 @@ function updateFatigue(){
   const bucket30=Math.floor((Date.now()-startTime)/30000);
   if(!fatigue.buckets[bucket30]) fatigue.buckets[bucket30]={speeds:[]};
   players.list.forEach((p,i)=>{
-    const trail=p.trail||[];
-    if(trail.length>=2){
-      const spd=Math.hypot(trail[trail.length-1][0]-trail[trail.length-2][0],
-                           trail[trail.length-1][1]-trail[trail.length-2][1]);
-      fatigue.buckets[bucket30].speeds.push(spd);
+    // Utilise le bassin (pelvis) pour mesurer l'intensité des déplacements
+    if(p.speed!=null && p.speed>0){
+      fatigue.buckets[bucket30].speeds.push(p.speed);
     }
   });
   if(bucket30<2) return;
