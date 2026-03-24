@@ -774,6 +774,9 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
       <div class="vpb-btn" onclick="setVideoSpeed(0.5)">× 0.5</div>
       <div class="vpb-btn on" id="vpbSpeed1" onclick="setVideoSpeed(1)">× 1</div>
       <div class="vpb-btn" onclick="setVideoSpeed(2)">× 2</div>
+      <div class="vpb-btn" id="vpbD1" onclick="setAnalysisDensity(1)" title="Analyse chaque frame">PRÉCIS</div>
+      <div class="vpb-btn" id="vpbD2" onclick="setAnalysisDensity(2)" title="Analyse 1 frame sur 2 — idéal &gt;30 min">RAPIDE</div>
+      <div class="vpb-btn" id="vpbD3" onclick="setAnalysisDensity(3)" title="Analyse 1 frame sur 3 — matchs complets">ULTRA</div>
       <div class="vpb-btn" onclick="changeVideoSource()">⏏ CHANGER</div>
     </div>
   </div>
@@ -1066,6 +1069,14 @@ let model=null, stream=null, animId=null;
 let isAnalyzing=false, facingMode='environment';
 let frameIdx=0, startTime=Date.now();
 let fpsArr=[], lastFPSTime=Date.now();
+
+// ── Performance : pose detection async ────────────────────
+let poseRunning=false;
+let _loopTmpCvs=null, _loopTmpCtx=null; // canvas réutilisé
+
+// ── Densité d'analyse (vidéos longues) ────────────────────
+// 1 = chaque frame, 2 = 1 sur 2, 3 = 1 sur 3
+let analysisDensity=1;
 
 // ── MediaRecorder state ────────────────────────────────────
 let mediaRec=null, recChunks=[], isRecording=false;
@@ -1774,6 +1785,7 @@ function classifyShot(){
   shots.lastFrame=frameIdx;
   const ts=(Date.now()-startTime)/1000;
   shots.history.push({time:ts,type});
+  if(shots.history.length>10000) shots.history.splice(0,2000); // évite fuite mémoire
   shots.counts[type]=(shots.counts[type]||0)+1;
   return type;
 }
@@ -1810,6 +1822,7 @@ function updateRally(shuttlePos, shot){
       const winner=(rally.lastY||0)>(rally.netY||9999)?'top':'bot';
       rally.current={...rally.current,endT:ts,dur:dur.toFixed(1),winner};
       rally.all.push({...rally.current});
+      if(rally.all.length>3000) rally.all.splice(0,500); // évite fuite mémoire
       rally.score[winner]++;
       const icon={floor:'🟡',net:'🔴',out:'🟠'}[end]||'⚪';
       const wlbl=winner==='top'?'J1':'J2';
@@ -2074,13 +2087,100 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
 }
 
 // ══════════════════════════════════════════════════════════
-//  MAIN LOOP
+//  POSE PROCESSING (appelé en callback async, hors boucle)
 // ══════════════════════════════════════════════════════════
-async function loop(){
+function processPosesResult(poses, W, H){
+  const matched=[null,null];
+  const used=new Set();
+  for(let slot=0;slot<2;slot++){
+    const prev=players.list[slot];
+    if(!prev||prev.cx==null) continue;
+    let best=-1, bestD=Infinity;
+    poses.forEach((pose,pi)=>{
+      if(used.has(pi)) return;
+      const kps=pose.keypoints;
+      const lh=kps[11], rh=kps[12];
+      const pcx=lh&&rh?(lh.x+rh.x)/2:(pose.box?(pose.box.xMin+pose.box.width/2):prev.cx);
+      const pcy=lh&&rh?(lh.y+rh.y)/2:(pose.box?(pose.box.yMin+pose.box.height/2):prev.cy);
+      const dist=Math.hypot(pcx-prev.cx,pcy-prev.cy);
+      if(dist<bestD){bestD=dist;best=pi;}
+    });
+    if(best>=0){matched[slot]=poses[best];used.add(best);}
+  }
+  poses.forEach((pose,pi)=>{
+    if(used.has(pi)) return;
+    const s=matched.findIndex(m=>m===null);
+    if(s>=0){matched[s]=pose;used.add(pi);}
+  });
+
+  matched.forEach((pose,i)=>{
+    if(!pose) return;
+    if(!players.list[i]) players.list[i]={pelvisTrail:[],wristTrail:[],trail:[],stepCount:0,_prevFeet:{},speed:0};
+    const p=players.list[i];
+    const kps=pose.keypoints;
+
+    if(p.keypoints&&p.keypoints.length===17){
+      kps.forEach((kp,ki)=>{
+        if(kp.score>=CFG.POSE_SCORE&&p.keypoints[ki].score>=CFG.POSE_SCORE){
+          kp.x=p.keypoints[ki].x*.55+kp.x*.45;
+          kp.y=p.keypoints[ki].y*.55+kp.y*.45;
+        }
+      });
+    }
+    p.keypoints=kps;
+    if(pose.box) p.bbox=[pose.box.xMin,pose.box.yMin,pose.box.width,pose.box.height];
+
+    const lh=kps[11],rh=kps[12];
+    if(lh&&rh&&lh.score>=CFG.POSE_SCORE&&rh.score>=CFG.POSE_SCORE){
+      const px=(lh.x+rh.x)/2,py=(lh.y+rh.y)/2;
+      if(p.pelvis) p.speed=Math.hypot(px-p.pelvis[0],py-p.pelvis[1]);
+      p.pelvis=[px,py]; p.cx=px; p.cy=py;
+      p.pelvisTrail.push([px,py]); if(p.pelvisTrail.length>30) p.pelvisTrail.shift();
+      p.trail.push([px,py]); if(p.trail.length>20) p.trail.shift();
+      const zone=getZoneCalib(px,py,W,H);
+      p.zone=zone;
+      zoneCounts[i+1]=zoneCounts[i+1]||{};
+      zoneCounts[i+1][zone]=(zoneCounts[i+1][zone]||0)+1;
+    } else if(p.bbox){
+      p.cx=p.bbox[0]+p.bbox[2]/2;
+      p.cy=p.bbox[1]+p.bbox[3]/2;
+    }
+
+    const lw9=kps[9],rw10=kps[10];
+    const racketKp=(rw10&&lw9)?(rw10.score>=lw9.score?rw10:lw9):(rw10||lw9);
+    if(racketKp&&racketKp.score>=CFG.POSE_SCORE){
+      p.racket=[racketKp.x,racketKp.y];
+      p.wristTrail.push([racketKp.x,racketKp.y]);
+      if(p.wristTrail.length>18) p.wristTrail.shift();
+    }
+
+    const la=kps[15],ra=kps[16];
+    p.feet={
+      L:la&&la.score>=CFG.POSE_SCORE?[la.x,la.y]:null,
+      R:ra&&ra.score>=CFG.POSE_SCORE?[ra.x,ra.y]:null
+    };
+    [{kp:la,side:'L'},{kp:ra,side:'R'}].forEach(({kp,side})=>{
+      if(!kp||kp.score<CFG.POSE_SCORE) return;
+      const prev=p._prevFeet[side];
+      if(prev){
+        const d=Math.hypot(kp.x-prev[0],kp.y-prev[1]);
+        if(d>CFG.STEP_THRESH&&(!p._lastStep||frameIdx-p._lastStep>CFG.STEP_COOLDOWN)){
+          p.stepCount++; p._lastStep=frameIdx;
+        }
+      }
+      p._prevFeet[side]=[kp.x,kp.y];
+    });
+  });
+  players.lastDet=matched;
+}
+
+// ══════════════════════════════════════════════════════════
+//  MAIN LOOP  (synchrone — pose detection découplée)
+// ══════════════════════════════════════════════════════════
+function loop(){
   if(!isAnalyzing){ animId=requestAnimationFrame(loop); return; }
 
-  // Source : caméra ou vidéo fichier
-  const vid = videoMode
+  const vid=videoMode
     ? document.getElementById('videoSource')
     : document.getElementById('camVideo');
 
@@ -2089,186 +2189,79 @@ async function loop(){
   const W=cvs.width, H=cvs.height;
 
   if(W===0||H===0||vid.readyState<2){ animId=requestAnimationFrame(loop); return; }
-
-  // En mode vidéo, skip si la vidéo est en pause
-  if(videoMode && vid.paused){ animId=requestAnimationFrame(loop); return; }
+  if(videoMode&&vid.paused){ animId=requestAnimationFrame(loop); return; }
 
   frameIdx++;
 
-  // Capture frame
-  const tmpCvs=document.createElement('canvas');
-  tmpCvs.width=W; tmpCvs.height=H;
-  const tmpCtx=tmpCvs.getContext('2d');
-  tmpCtx.drawImage(vid,0,0,W,H);
-  const imageData=tmpCtx.getImageData(0,0,W,H);
+  // ── Canvas de travail réutilisé (évite d'en créer un par frame) ──
+  if(!_loopTmpCvs){
+    _loopTmpCvs=document.createElement('canvas');
+    _loopTmpCtx=_loopTmpCvs.getContext('2d');
+  }
+  if(_loopTmpCvs.width!==W||_loopTmpCvs.height!==H){
+    _loopTmpCvs.width=W; _loopTmpCvs.height=H;
+  }
+  _loopTmpCtx.drawImage(vid,0,0,W,H);
 
-  // ── Shuttle detection ──────────────────────────────────
-  const rawPos=detectShuttle(imageData,W,H);
-  // Kalman filter
+  // ── Densité d'analyse (vidéos longues) ─────────────────
+  const doAnalysis=(frameIdx%analysisDensity===0);
+
+  let rawPos=null;
+  if(doAnalysis){
+    const imageData=_loopTmpCtx.getImageData(0,0,W,H);
+    rawPos=detectShuttle(imageData,W,H);
+    autoDetectNet(imageData,W,H);
+    updateAdaptiveBrightness(imageData,W,H);
+  }
+
+  // ── Kalman ─────────────────────────────────────────────
   let shuttlePos=rawPos;
   if(rawPos&&prefs.kalman){
     shuttlePos=kalman.update(rawPos[0],rawPos[1]);
   } else if(!rawPos&&prefs.kalman&&kalman.initialized){
-    // Prédit position même sans détection
     kalman.predict();
-    const est=kalman.getEstimate();
-    shuttlePos=est; // position estimée
+    shuttlePos=kalman.getEstimate();
   } else if(rawPos){
     shuttlePos=rawPos;
   }
-  updateShuttle(shuttlePos);
+  if(doAnalysis) updateShuttle(shuttlePos);
 
-  // ── Auto filet ────────────────────────────────────────
-  autoDetectNet(imageData,W,H);
-
-  // ── Luminosité adaptative ─────────────────────────────
-  updateAdaptiveBrightness(imageData,W,H);
-
-  // ── Pose detection MoveNet — squelette + métriques ────
-  let detections=[];
-  if(model && frameIdx%CFG.POSE_EVERY===0){
-    try{
-      const poses = await model.estimatePoses(tmpCvs, {maxPoses:2, flipHorizontal:false, scoreThreshold:CFG.POSE_SCORE});
-
-      // Matching stable : associe chaque pose au slot joueur
-      // le plus proche via le centre du bassin (évite les inversions)
-      const matched=[null,null];
-      const used=new Set();
-      for(let slot=0;slot<2;slot++){
-        const prev=players.list[slot];
-        if(!prev||prev.cx==null) continue;
-        let best=-1, bestD=Infinity;
-        poses.forEach((pose,pi)=>{
-          if(used.has(pi)) return;
-          const kps=pose.keypoints;
-          const lh=kps[11], rh=kps[12];
-          const pcx=lh&&rh ? (lh.x+rh.x)/2 : (pose.box?(pose.box.xMin+pose.box.width/2):prev.cx);
-          const pcy=lh&&rh ? (lh.y+rh.y)/2 : (pose.box?(pose.box.yMin+pose.box.height/2):prev.cy);
-          const dist=Math.hypot(pcx-prev.cx, pcy-prev.cy);
-          if(dist<bestD){bestD=dist;best=pi;}
-        });
-        if(best>=0){matched[slot]=poses[best];used.add(best);}
-      }
-      poses.forEach((pose,pi)=>{
-        if(used.has(pi)) return;
-        const s=matched.findIndex(m=>m===null);
-        if(s>=0){matched[s]=pose;used.add(pi);}
-      });
-
-      // Mise à jour des joueurs avec les keypoints réels
-      matched.forEach((pose,i)=>{
-        if(!pose) return;
-        if(!players.list[i]) players.list[i]={pelvisTrail:[],wristTrail:[],trail:[],stepCount:0,_prevFeet:{},speed:0};
-        const p=players.list[i];
-        const kps=pose.keypoints;
-
-        // EMA légère sur les keypoints (alpha=0.45)
-        if(p.keypoints && p.keypoints.length===17){
-          kps.forEach((kp,ki)=>{
-            if(kp.score>=CFG.POSE_SCORE && p.keypoints[ki].score>=CFG.POSE_SCORE){
-              kp.x = p.keypoints[ki].x*.55 + kp.x*.45;
-              kp.y = p.keypoints[ki].y*.55 + kp.y*.45;
-            }
-          });
-        }
-        p.keypoints=kps;
-
-        // Bbox depuis le box MoveNet
-        if(pose.box){
-          p.bbox=[pose.box.xMin, pose.box.yMin, pose.box.width, pose.box.height];
-        }
-
-        // ── Bassin (hanches) ────────────────────────────
-        const lh=kps[11], rh=kps[12];
-        if(lh&&rh&&lh.score>=CFG.POSE_SCORE&&rh.score>=CFG.POSE_SCORE){
-          const px=(lh.x+rh.x)/2, py=(lh.y+rh.y)/2;
-          if(p.pelvis) p.speed=Math.hypot(px-p.pelvis[0], py-p.pelvis[1]);
-          p.pelvis=[px,py];
-          p.cx=px; p.cy=py;
-          p.pelvisTrail.push([px,py]);
-          if(p.pelvisTrail.length>30) p.pelvisTrail.shift();
-          p.trail.push([px,py]);
-          if(p.trail.length>20) p.trail.shift();
-          // Zone heatmap depuis le bassin
-          const zone=getZoneCalib(px,py,W,H);
-          p.zone=zone;
-          zoneCounts[i+1]=zoneCounts[i+1]||{};
-          zoneCounts[i+1][zone]=(zoneCounts[i+1][zone]||0)+1;
-        } else if(p.bbox){
-          p.cx=p.bbox[0]+p.bbox[2]/2;
-          p.cy=p.bbox[1]+p.bbox[3]/2;
-        }
-
-        // ── Poignet raquette (dominant = score max) ─────
-        const lw9=kps[9], rw10=kps[10];
-        const racketKp=(rw10&&lw9)?(rw10.score>=lw9.score?rw10:lw9):(rw10||lw9);
-        if(racketKp&&racketKp.score>=CFG.POSE_SCORE){
-          p.racket=[racketKp.x, racketKp.y];
-          p.wristTrail.push([racketKp.x, racketKp.y]);
-          if(p.wristTrail.length>18) p.wristTrail.shift();
-        }
-
-        // ── Pieds (chevilles) + comptage de pas ─────────
-        const la=kps[15], ra=kps[16];
-        p.feet={
-          L: la&&la.score>=CFG.POSE_SCORE?[la.x,la.y]:null,
-          R: ra&&ra.score>=CFG.POSE_SCORE?[ra.x,ra.y]:null
-        };
-        [{kp:la,side:'L'},{kp:ra,side:'R'}].forEach(({kp,side})=>{
-          if(!kp||kp.score<CFG.POSE_SCORE) return;
-          const prev=p._prevFeet[side];
-          if(prev){
-            const d=Math.hypot(kp.x-prev[0], kp.y-prev[1]);
-            if(d>CFG.STEP_THRESH && (!p._lastStep||frameIdx-p._lastStep>CFG.STEP_COOLDOWN)){
-              p.stepCount++;
-              p._lastStep=frameIdx;
-            }
-          }
-          p._prevFeet[side]=[kp.x,kp.y];
-        });
-      });
-
-      players.lastDet=matched;
-      detections=matched;
-    }catch(e){}
-  } else {
-    detections=players.lastDet||[];
+  // ── Pose detection : async, ne bloque plus la boucle ───
+  if(doAnalysis && model && frameIdx%CFG.POSE_EVERY===0 && !poseRunning){
+    poseRunning=true;
+    model.estimatePoses(_loopTmpCvs,{maxPoses:2,flipHorizontal:false,scoreThreshold:CFG.POSE_SCORE})
+      .then(poses=>{ processPosesResult(poses,W,H); poseRunning=false; })
+      .catch(()=>{ poseRunning=false; });
   }
+  const detections=players.lastDet||[];
 
-  // ── Trajectoire volant & mouvement joueurs ────────────
-  analyzeShuttleTrajectory();
-  players.list.forEach(p=>classifyPlayerMovement(p));
-
-  // ── Classify shot ──────────────────────────────────────
-  const shot=classifyShot();
-
-  // ── Rally detector ────────────────────────────────────
-  updateRally(shuttlePos,shot?1:0);
-
-  // ── Service check ─────────────────────────────────────
-  updateServeCheck(shuttlePos,W,H);
-
-  // ── Fatigue & tactique ────────────────────────────────
-  if(frameIdx%30===0) updateFatigue();
-  if(frameIdx%90===0){
-    const tp=analyzeTactics();
-    if(tp&&tp.count>=3) showToast(`🎯 Pattern : ${tp.pattern.replace(/→/g,' → ')} (×${tp.count})`);
+  // ── Analyse (seulement sur les frames analysées) ───────
+  let shot=null;
+  if(doAnalysis){
+    analyzeShuttleTrajectory();
+    players.list.forEach(p=>classifyPlayerMovement(p));
+    shot=classifyShot();
+    updateRally(shuttlePos,shot?1:0);
+    updateServeCheck(shuttlePos,W,H);
+    if(frameIdx%30===0) updateFatigue();
+    if(frameIdx%90===0){
+      const tp=analyzeTactics();
+      if(tp&&tp.count>=3) showToast(`🎯 Pattern : ${tp.pattern.replace(/→/g,' → ')} (×${tp.count})`);
+    }
+    if(shot) onShotEvent(shot);
+    if(shuttlePos&&prefs.apiKey) tryAutoScore(shuttlePos,W,H);
   }
-  if(shot) onShotEvent(shot);
-
-  // ── Score automatique IA (async, ne bloque pas) ───────
-  if(shuttlePos&&prefs.apiKey) tryAutoScore(shuttlePos,W,H);
 
   // ── Draw ──────────────────────────────────────────────
   draw(ctx,W,H,shuttlePos,detections,shot);
 
-  // ── Composite canvas pour l'enregistrement ────────────
-  if(isRecording && recCanvas && recCtx){
+  // ── Composite pour l'enregistrement ──────────────────
+  if(isRecording&&recCanvas&&recCtx){
     recCtx.drawImage(vid,0,0,recCanvas.width,recCanvas.height);
     recCtx.drawImage(cvs,0,0,recCanvas.width,recCanvas.height);
   }
 
-  // ── Update UI ─────────────────────────────────────────
+  // ── FPS & UI ──────────────────────────────────────────
   const now=Date.now();
   fpsArr.push(1000/(now-lastFPSTime)); lastFPSTime=now;
   if(fpsArr.length>20) fpsArr.shift();
@@ -2280,7 +2273,13 @@ async function loop(){
   }
 
   updateTopUI(fps);
-  if(frameIdx%8===0) updateDetailUI();
+  if(frameIdx%8===0){
+    if(typeof requestIdleCallback!=='undefined'){
+      requestIdleCallback(updateDetailUI,{timeout:200});
+    } else {
+      updateDetailUI();
+    }
+  }
 
   animId=requestAnimationFrame(loop);
 }
@@ -2989,6 +2988,7 @@ function resetStats(){
   tactics.patterns={}; tactics.lastInsight=null;
   autoNetFrameCount=0; adaptFrameCount=0;
   lastAutoScoreFrame=-60;
+  poseRunning=false; // reset pose detection lock
   document.getElementById('scoreBox').textContent='0 — 0';
   document.getElementById('timeline').innerHTML='';
   startTime=Date.now(); frameIdx=0;
@@ -3600,7 +3600,19 @@ function loadVideoFile(file){
     if(!calib.done) rally.netY=vs.videoHeight*0.5;
     document.getElementById('videoProgressBar').className='show';
     updateVpbTime(vs);
-    // Si pas encore calibré, calibrage d'abord — sinon démarre direct
+
+    // Suggestion mode rapide pour les vidéos longues
+    const dur=vs.duration||0;
+    if(dur>1800){           // > 30 minutes
+      setAnalysisDensity(2);
+      showToast(`Vidéo longue (${Math.round(dur/60)} min) — Mode Rapide activé`);
+    } else if(dur>3600){    // > 60 minutes
+      setAnalysisDensity(3);
+      showToast(`Vidéo très longue (${Math.round(dur/60)} min) — Mode Ultra activé`);
+    } else {
+      setAnalysisDensity(1); // reset au précis pour les courtes vidéos
+    }
+
     if(!calib.done){ vs.pause(); setTimeout(startCalib, 400); }
     else startVideoAnalysis();
   },{once:true});
@@ -3680,12 +3692,22 @@ function toggleVideoPlay(){
 function setVideoSpeed(rate){
   if(!videoMode) return;
   document.getElementById('videoSource').playbackRate=rate;
-  // Highlight bouton actif
   document.querySelectorAll('.vpb-btn').forEach(b=>{
     if(b.textContent===`× ${rate}`) b.classList.add('on');
     else if(b.textContent.startsWith('×')) b.classList.remove('on');
   });
   showToast(`Vitesse × ${rate}`);
+}
+
+function setAnalysisDensity(d){
+  analysisDensity=d;
+  const labels={1:'PRÉCIS',2:'RAPIDE',3:'ULTRA'};
+  ['vpbD1','vpbD2','vpbD3'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('on', parseInt(id.slice(-1))===d);
+  });
+  const msgs={1:'Analyse complète (chaque frame)',2:'Mode Rapide — 1 frame sur 2',3:'Mode Ultra — 1 frame sur 3'};
+  showToast(msgs[d]||'');
 }
 
 function changeVideoSource(){
