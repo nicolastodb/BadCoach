@@ -1,0 +1,3214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>BadCoach Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,::before,::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --g:#00e676;--c:#00e5ff;--y:#ffc400;--r:#ff4444;--b:#3d8eff;--p:#d500f9;
+  --bg:rgba(0,0,0,.75);--bg2:rgba(0,0,0,.55);--border:rgba(255,255,255,.12);
+  --text:#f0f4ff;--muted:rgba(255,255,255,.45);
+  --fh:'Barlow Condensed',sans-serif;--fm:'JetBrains Mono',monospace;
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;background:#000;color:var(--text);font-family:var(--fh);touch-action:manipulation}
+
+/* ── FULL SCREEN STAGE ── */
+#stage{position:fixed;inset:0;background:#000}
+#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#overlay{position:absolute;inset:0;width:100%;height:100%}
+
+/* ── TOP BAR ── */
+#topbar{
+  position:absolute;top:0;left:0;right:0;z-index:10;
+  padding:calc(var(--safe-t) + 10px) 14px 10px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,transparent 100%);
+  display:flex;align-items:center;gap:10px;
+}
+.logo{font-size:22px;font-weight:800;letter-spacing:3px;color:#fff}
+.logo em{color:var(--g);font-style:normal}
+#scoreBox{
+  margin-left:auto;
+  font-size:28px;font-weight:800;letter-spacing:4px;color:var(--g);
+  text-shadow:0 0 20px rgba(0,230,118,.5);min-width:90px;text-align:center;
+}
+#liveBadge{
+  font-family:var(--fm);font-size:10px;letter-spacing:2px;padding:3px 8px;
+  border-radius:3px;border:1px solid var(--border);color:var(--muted);background:var(--bg2);
+}
+#liveBadge.on{color:var(--g);border-color:var(--g);background:rgba(0,230,118,.1);animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── SHOT FLASH ── */
+#shotFlash{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:72px;font-weight:800;letter-spacing:4px;
+  opacity:0;pointer-events:none;z-index:20;text-shadow:0 0 40px currentColor;
+}
+#shotFlash.show{animation:shotpop 1s forwards}
+@keyframes shotpop{0%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(.9)}}
+
+/* ── RALLY BADGE ── */
+#rallyBadge{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  margin-top:-60px;z-index:15;
+  font-size:13px;font-weight:700;letter-spacing:2px;color:var(--c);
+  font-family:var(--fm);opacity:0;transition:opacity .3s;pointer-events:none;
+  text-shadow:0 0 12px rgba(0,229,255,.6);
+}
+#rallyBadge.show{opacity:1}
+
+/* ── STATS OVERLAY ── */
+#statsBar{
+  position:absolute;bottom:0;left:0;right:0;z-index:10;
+  padding:0 0 calc(var(--safe-b) + 6px);
+  background:linear-gradient(to top,rgba(0,0,0,.85) 0%,transparent 100%);
+}
+.stats-row{display:flex;align-items:stretch;gap:0;padding:0 10px 6px}
+.stat-cell{
+  flex:1;text-align:center;padding:8px 4px;
+  border-right:1px solid var(--border);
+}
+.stat-cell:last-child{border-right:none}
+.sv{font-size:22px;font-weight:800;line-height:1;transition:all .2s}
+.sl{font-size:9px;letter-spacing:1.5px;color:var(--muted);margin-top:2px;text-transform:uppercase}
+
+/* ── BOTTOM CONTROLS ── */
+.ctrl-row{display:flex;align-items:center;justify-content:center;gap:12px;padding:0 14px 4px}
+.ctrl-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:var(--bg);border:1px solid var(--border);border-radius:12px;
+  padding:10px 16px;cursor:pointer;transition:all .15s;min-width:64px;
+  font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--muted);
+}
+.ctrl-btn:active{transform:scale(.95);background:rgba(255,255,255,.1)}
+.ctrl-btn.primary{background:rgba(0,230,118,.15);border-color:var(--g);color:var(--g)}
+.ctrl-btn.danger{background:rgba(255,68,68,.12);border-color:var(--r);color:var(--r)}
+.ctrl-icon{font-size:20px;line-height:1}
+
+/* ── DETAIL PANEL (slide up) ── */
+#detailPanel{
+  position:absolute;bottom:0;left:0;right:0;z-index:30;
+  background:rgba(5,7,15,.96);border-top:1px solid var(--border);border-radius:16px 16px 0 0;
+  padding:0 16px calc(var(--safe-b) + 16px);
+  transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);
+  max-height:80dvh;overflow-y:auto;
+}
+#detailPanel.open{transform:translateY(0)}
+.panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 16px}
+.panel-title{font-size:13px;font-weight:700;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px}
+
+/* ── CARDS ── */
+.dcard{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.dcard-t{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.mrow{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.mrow:last-child{border-bottom:none}
+.ml{font-size:12px;color:var(--muted)}.mv{font-family:var(--fm);font-size:12px;transition:color .2s}
+.big-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.bc{background:rgba(255,255,255,.05);border-radius:8px;padding:10px;text-align:center}
+.bn{font-size:28px;font-weight:800;line-height:1;transition:all .2s}
+.blab{font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.5px;text-transform:uppercase}
+.bar-chart{display:flex;flex-direction:column;gap:5px}
+.bar-row{display:flex;align-items:center;gap:8px}
+.bar-lbl{width:56px;font-family:var(--fm);font-size:9px;color:var(--muted);flex-shrink:0}
+.bar-track{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.bar-val{font-family:var(--fm);font-size:9px;min-width:22px;text-align:right}
+
+/* ── COURT SVG ── */
+.courts-row{display:flex;gap:14px;justify-content:center}
+.court-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.court-lbl{font-family:var(--fm);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.csw{width:110px;height:148px}
+
+/* ── TIMELINE ── */
+.tl-list{display:flex;flex-direction:column;gap:4px;max-height:160px;overflow-y:auto}
+.tl-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(255,255,255,.04);border-left:2px solid var(--border);border-radius:0 5px 5px 0;font-size:11px}
+.tl-item.new{animation:tlslide .3s ease}
+@keyframes tlslide{from{transform:translateX(-8px);opacity:0}to{transform:translateX(0);opacity:1}}
+.tl-t{font-family:var(--fm);font-size:9px;color:var(--muted);min-width:36px}
+.tl-badge{font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:1px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,.08)}
+
+/* ── LOADING ── */
+#loadScreen{
+  position:fixed;inset:0;z-index:100;background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+#loadLogo{font-size:36px;font-weight:800;letter-spacing:4px}
+#loadLogo em{color:var(--g);font-style:normal}
+#loadMsg{font-family:var(--fm);font-size:11px;color:var(--muted);letter-spacing:2px}
+.spinner{width:36px;height:36px;border:2px solid rgba(0,230,118,.2);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#startBtn{
+  padding:14px 32px;background:var(--g);color:#000;border:none;border-radius:8px;
+  font-family:var(--fh);font-size:18px;font-weight:800;letter-spacing:2px;cursor:pointer;
+  display:none;transition:transform .1s;
+}
+#startBtn:active{transform:scale(.97)}
+
+/* ── HINT ── */
+#hint{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:var(--fm);font-size:11px;color:var(--muted);letter-spacing:1.5px;
+  text-align:center;z-index:5;pointer-events:none;line-height:2;
+  opacity:1;transition:opacity .5s;
+}
+
+/* ── CAMERA FLIP BTN ── */
+#flipBtn{
+  position:absolute;top:calc(var(--safe-t) + 10px);right:14px;z-index:15;
+  width:40px;height:40px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:18px;cursor:pointer;transition:all .15s;
+}
+#flipBtn:active{transform:scale(.9);background:rgba(255,255,255,.15)}
+
+/* ── REC INDICATOR ── */
+#recIndicator{
+  display:none;align-items:center;gap:6px;
+  font-family:var(--fm);font-size:10px;letter-spacing:1px;color:#fff;
+}
+#recDot{
+  width:8px;height:8px;border-radius:50%;background:var(--r);
+  animation:recdot 1s infinite;flex-shrink:0;
+}
+@keyframes recdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+#recIndicator.show{display:flex}
+
+/* ── SAVE MODAL ── */
+#saveModal{
+  position:absolute;inset:0;z-index:50;
+  background:rgba(0,0,0,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:calc(var(--safe-b) + 16px);
+}
+#saveModal.show{display:flex}
+#saveModal video{
+  width:100%;max-height:55dvh;object-fit:contain;
+  border-bottom:1px solid var(--border);
+}
+.modal-bar{
+  width:100%;padding:14px 16px;display:flex;flex-direction:column;gap:10px;
+}
+.modal-title{
+  font-size:16px;font-weight:700;letter-spacing:2px;text-align:center;color:#fff;
+}
+.modal-meta{
+  font-family:var(--fm);font-size:10px;color:var(--muted);text-align:center;letter-spacing:1px;
+}
+.modal-actions{display:flex;gap:10px;}
+.modal-btn{
+  flex:1;padding:14px;border-radius:10px;border:none;cursor:pointer;
+  font-family:var(--fh);font-size:16px;font-weight:800;letter-spacing:1.5px;
+  transition:transform .1s;
+}
+.modal-btn:active{transform:scale(.97)}
+.modal-btn.dl{background:var(--g);color:#000;}
+.modal-btn.cl{background:rgba(255,255,255,.1);color:#fff;border:1px solid var(--border);}
+
+/* ── REC BUTTON STATE ── */
+.ctrl-btn.rec-on{background:rgba(255,68,68,.2);border-color:var(--r);color:var(--r);}
+
+/* ══ CALIBRATION ═════════════════════════════════════════ */
+#calibOverlay{
+  position:absolute;inset:0;z-index:40;
+  display:none;flex-direction:column;
+  background:rgba(0,0,0,.55);
+}
+#calibOverlay.show{display:flex}
+
+#calibTop{
+  padding:calc(var(--safe-t) + 14px) 16px 12px;
+  background:rgba(0,0,0,.7);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+#calibTitle{font-size:16px;font-weight:800;letter-spacing:3px;color:var(--g)}
+#calibCancel{
+  margin-left:auto;font-size:12px;font-weight:700;letter-spacing:1.5px;
+  padding:6px 14px;border:1px solid var(--border);border-radius:6px;
+  background:rgba(255,255,255,.08);color:var(--muted);cursor:pointer;
+  font-family:var(--fh);
+}
+#calibInstruction{
+  padding:10px 16px;
+  font-family:var(--fm);font-size:11px;letter-spacing:1.5px;
+  color:var(--text);text-align:center;
+  background:rgba(0,0,0,.5);
+}
+#calibStep{
+  display:flex;justify-content:center;gap:8px;padding:8px 0;
+}
+.calib-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:rgba(255,255,255,.15);transition:all .2s;
+}
+.calib-dot.done{background:var(--g)}
+.calib-dot.current{background:var(--c);transform:scale(1.3);box-shadow:0 0 8px var(--c)}
+
+#calibCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+
+#calibDone{
+  position:absolute;bottom:calc(var(--safe-b)+20px);left:50%;transform:translateX(-50%);
+  padding:14px 36px;background:var(--g);color:#000;border:none;border-radius:10px;
+  font-family:var(--fh);font-size:18px;font-weight:800;letter-spacing:2px;cursor:pointer;
+  display:none;
+}
+
+/* ── SERVICE BADGE ── */
+#serviceBadge{
+  position:absolute;top:calc(var(--safe-t) + 70px);left:50%;transform:translateX(-50%);
+  z-index:22;pointer-events:none;
+  font-size:26px;font-weight:800;letter-spacing:3px;color:var(--p);
+  font-family:var(--fh);opacity:0;transition:opacity .2s;
+  text-shadow:0 0 20px rgba(213,0,249,.5);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+#serviceBadge small{font-size:11px;font-family:var(--fm);letter-spacing:2px;color:rgba(213,0,249,.7)}
+#serviceBadge.show{opacity:1;animation:svcpop 2.5s forwards}
+@keyframes svcpop{0%{opacity:1}75%{opacity:1}100%{opacity:0}}
+
+/* ── CALIB DONE BADGE ── */
+#calibBadge{
+  position:absolute;top:calc(var(--safe-t)+50px);left:50%;transform:translateX(-50%);
+  z-index:12;pointer-events:none;
+  font-family:var(--fm);font-size:9px;letter-spacing:2px;
+  padding:3px 10px;border-radius:3px;border:1px solid rgba(0,230,118,.4);
+  background:rgba(0,230,118,.08);color:var(--g);
+  opacity:0;transition:opacity .3s;
+}
+#calibBadge.show{opacity:1}
+
+/* ══ NEW FEATURES CSS ════════════════════════════════════ */
+
+/* Overlay minimaliste */
+body.minimal #statsBar .stats-row{display:none}
+body.minimal #detailPanel{display:none}
+body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
+#minBtn.on{color:var(--g);border-color:var(--g)}
+
+/* Luminosité adaptative */
+#overlayDim{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:#000;opacity:0;transition:opacity .5s;
+}
+
+/* Haptique / feedback visuel pulse */
+@keyframes hapticPulse{0%{transform:scale(1)}40%{transform:scale(1.06)}100%{transform:scale(1)}}
+.haptic{animation:hapticPulse .18s ease}
+
+/* Panel réglages */
+#settingsPanel{
+  position:absolute;inset:0;z-index:45;
+  background:rgba(5,7,15,.97);
+  display:none;flex-direction:column;
+  overflow-y:auto;
+}
+#settingsPanel.show{display:flex}
+#settingsPanel header{
+  padding:calc(var(--safe-t)+14px) 16px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+#settingsPanel header h2{font-size:18px;font-weight:800;letter-spacing:3px;flex:1}
+.sp-close{font-size:22px;cursor:pointer;color:var(--muted);padding:4px 8px}
+.sp-section{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--muted);
+  padding:16px 16px 6px;text-transform:uppercase}
+.sp-row{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:12px}
+.sp-lbl{flex:1;font-size:13px}
+.sp-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.sp-toggle{
+  width:44px;height:26px;background:var(--border);border-radius:13px;
+  position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;
+}
+.sp-toggle.on{background:var(--g)}
+.sp-toggle::after{
+  content:'';position:absolute;width:20px;height:20px;border-radius:50%;
+  background:#fff;top:3px;left:3px;transition:left .2s;
+}
+.sp-toggle.on::after{left:21px}
+.sp-slider-row{padding:10px 16px 14px;border-bottom:1px solid var(--border)}
+.sp-slider-lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+.sp-slider-lbl b{color:var(--text);font-family:var(--fm)}
+.sp-btn-row{padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap}
+.sp-btn{padding:8px 16px;background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:8px;font-family:var(--fh);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.sp-btn:active{background:rgba(255,255,255,.12)}
+.sp-btn.danger{color:var(--r);border-color:rgba(255,68,68,.3)}
+.sp-history-list{padding:0 16px 16px;display:flex;flex-direction:column;gap:6px}
+.sp-history-item{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;font-size:12px;display:flex;justify-content:space-between;align-items:center}
+.sp-history-score{font-family:var(--fh);font-size:20px;font-weight:800;color:var(--g)}
+
+/* Panel entraînement IA */
+#trainingPanel{
+  position:absolute;inset:0;z-index:46;
+  background:rgba(5,7,15,.98);
+  display:none;flex-direction:column;overflow-y:auto;
+}
+#trainingPanel.show{display:flex}
+#trainingPanel header{
+  padding:calc(var(--safe-t)+14px) 16px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+#trainingPanel header h2{font-size:18px;font-weight:800;letter-spacing:3px;flex:1;color:var(--g)}
+.tp-body{padding:16px;flex:1}
+.tp-loading{text-align:center;padding:48px 16px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.tp-spinner{width:32px;height:32px;border:2px solid rgba(0,230,118,.2);border-top-color:var(--g);
+  border-radius:50%;animation:spin .8s linear infinite}
+.tp-msg{font-family:var(--fm);font-size:11px;color:var(--muted);letter-spacing:2px}
+.tp-exercise{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;
+  padding:14px;margin-bottom:12px}
+.tp-ex-num{font-family:var(--fm);font-size:9px;letter-spacing:2px;color:var(--g);margin-bottom:6px}
+.tp-ex-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.tp-ex-body{font-size:12px;line-height:1.7;color:var(--muted)}
+.tp-ex-meta{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.tp-ex-badge{font-family:var(--fm);font-size:10px;padding:2px 8px;border-radius:4px;
+  background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);color:var(--g)}
+.tp-intro{font-size:13px;line-height:1.7;color:var(--muted);margin-bottom:16px;
+  padding:12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border)}
+.tp-error{color:var(--r);text-align:center;padding:24px;font-family:var(--fm);font-size:11px}
+.tp-btn-row{padding:16px;display:flex;gap:8px;flex-direction:column}
+.tp-btn{width:100%;padding:14px;border-radius:10px;border:none;cursor:pointer;
+  font-family:var(--fh);font-size:16px;font-weight:800;letter-spacing:2px;transition:transform .1s}
+.tp-btn:active{transform:scale(.98)}
+.tp-btn.primary{background:var(--g);color:#000}
+.tp-btn.secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border)}
+
+/* API Key input */
+.sp-input{
+  width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);
+  border-radius:6px;padding:8px 10px;font-family:var(--fm);font-size:11px;outline:none;
+  transition:border .2s;
+}
+.sp-input:focus{border-color:var(--g)}
+
+/* ══ VIDEO UPLOAD MODE ═══════════════════════════════════ */
+#sourceScreen{
+  position:fixed;inset:0;z-index:102;background:#000;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;padding:24px;
+}
+#sourceScreen.show{display:flex}
+.src-logo{font-size:32px;font-weight:800;letter-spacing:4px;margin-bottom:6px}
+.src-logo em{color:var(--g);font-style:normal}
+.src-tagline{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:36px}
+.src-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:380px;margin-bottom:16px}
+.src-card{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:14px;padding:22px 14px;text-align:center;cursor:pointer;transition:all .2s;
+}
+.src-card:active{transform:scale(.97)}
+.src-card.cam{border-color:rgba(0,230,118,.3)}
+.src-card.vid{border-color:rgba(68,138,255,.3)}
+.src-card-icon{font-size:36px;margin-bottom:10px}
+.src-card-title{font-size:16px;font-weight:800;letter-spacing:2px;margin-bottom:4px}
+.src-card-sub{font-size:11px;color:var(--muted);line-height:1.5}
+.src-drop{
+  width:100%;max-width:380px;border:2px dashed rgba(68,138,255,.3);border-radius:12px;
+  padding:18px;text-align:center;cursor:pointer;
+  background:rgba(68,138,255,.04);transition:all .2s;display:none;
+}
+.src-drop.show{display:block}
+.src-drop:hover,.src-drop.over{border-color:var(--b);background:rgba(68,138,255,.1)}
+.src-drop-title{font-size:14px;font-weight:700;letter-spacing:1px;color:var(--b);margin-bottom:4px}
+.src-drop-sub{font-size:11px;color:var(--muted)}
+#videoSource{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;background:#000;display:none;
+}
+#videoSource.show{display:block}
+#videoProgressBar{
+  position:absolute;bottom:0;left:0;right:0;z-index:12;display:none;
+  background:rgba(0,0,0,.85);padding:10px 14px calc(var(--safe-b)+10px);flex-direction:column;gap:8px;
+}
+#videoProgressBar.show{display:flex}
+.vpb-track{
+  width:100%;height:6px;background:rgba(255,255,255,.15);
+  border-radius:3px;cursor:pointer;position:relative;
+}
+.vpb-fill{
+  height:100%;background:linear-gradient(90deg,var(--g),var(--c));
+  border-radius:3px;pointer-events:none;transition:width .08s linear;
+}
+.vpb-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vpb-time{font-family:var(--fm);font-size:10px;color:var(--muted);min-width:88px;flex-shrink:0}
+.vpb-btn{
+  font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1px;
+  padding:5px 11px;background:rgba(255,255,255,.08);border:1px solid var(--border);
+  border-radius:5px;cursor:pointer;color:var(--text);transition:all .15s;white-space:nowrap;
+}
+.vpb-btn:active{background:rgba(255,255,255,.2)}
+.vpb-btn.on{border-color:var(--g);color:var(--g);background:rgba(0,230,118,.1)}
+#videoModeBadge{
+  position:absolute;top:calc(var(--safe-t)+60px);left:50%;transform:translateX(-50%);
+  z-index:13;pointer-events:none;font-family:var(--fm);font-size:9px;letter-spacing:2px;
+  padding:3px 10px;border-radius:3px;border:1px solid rgba(68,138,255,.4);
+  background:rgba(68,138,255,.1);color:var(--b);opacity:0;transition:opacity .3s;
+}
+#videoModeBadge.show{opacity:1}
+
+#summaryScreen{
+  position:fixed;inset:0;z-index:80;
+  background:#060810;
+  display:none;flex-direction:column;
+  overflow:hidden;
+}
+#summaryScreen.show{display:flex}
+
+#sumHeader{
+  flex-shrink:0;
+  padding:calc(var(--safe-t) + 12px) 16px 12px;
+  background:rgba(0,0,0,.4);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+#sumHeaderLogo{font-size:18px;font-weight:800;letter-spacing:3px}
+#sumHeaderLogo em{color:var(--g);font-style:normal}
+#sumDate{font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:1px;margin-left:auto}
+
+#sumBody{flex:1;overflow-y:auto;padding:14px 14px calc(var(--safe-b) + 90px)}
+
+/* Score banner */
+#sumScore{
+  text-align:center;padding:20px 0 16px;
+  border-bottom:1px solid var(--border);margin-bottom:16px;
+}
+#sumScoreNum{
+  font-size:64px;font-weight:800;letter-spacing:6px;color:var(--g);
+  line-height:1;
+}
+#sumScoreLabel{
+  font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:2px;margin-top:6px;
+}
+#sumDuration{
+  font-size:13px;font-weight:700;color:var(--muted);letter-spacing:2px;margin-top:4px;
+}
+
+/* KPI grid */
+.sum-kpis{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;
+}
+.sum-kpi{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:12px;text-align:center;
+}
+.sum-kpi-val{font-size:30px;font-weight:800;line-height:1}
+.sum-kpi-lbl{font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+
+/* Section titles */
+.sum-section{
+  font-family:var(--fm);font-size:9px;letter-spacing:2.5px;
+  color:var(--muted);text-transform:uppercase;
+  margin:18px 0 10px;
+  display:flex;align-items:center;gap:8px;
+}
+.sum-section::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Charts */
+.sum-chart-wrap{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:10px;padding:14px;margin-bottom:10px;
+}
+#donutWrap{display:flex;align-items:center;gap:16px}
+#donutCanvas{flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:7px;flex:1}
+.dl-row{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.5px}
+.dl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dl-pct{font-family:var(--fm);font-size:10px;color:var(--muted);margin-left:auto}
+
+/* Rally timeline */
+#rallyCanvas{width:100%;border-radius:6px;display:block}
+
+/* Heatmaps summary */
+.sum-courts{display:flex;gap:16px;justify-content:center}
+.sum-court-wrap{display:flex;flex-direction:column;align-items:center;gap:5px}
+.sum-court-lbl{font-family:var(--fm);font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.sum-csw{width:120px;height:162px}
+
+/* Insight card */
+.sum-insight{
+  background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.2);
+  border-radius:10px;padding:14px;margin-bottom:10px;
+  font-size:13px;line-height:1.7;color:var(--text);
+}
+.sum-insight strong{color:var(--g);font-weight:700}
+
+/* Bottom actions */
+#sumActions{
+  position:fixed;bottom:0;left:0;right:0;z-index:81;
+  padding:12px 14px calc(var(--safe-b) + 10px);
+  background:rgba(6,8,16,.96);border-top:1px solid var(--border);
+  display:none;flex-direction:column;gap:8px;
+}
+#summaryScreen.show~#sumActions,
+#sumActions.show{display:flex}
+.sum-btn{
+  width:100%;padding:15px;border-radius:10px;border:none;cursor:pointer;
+  font-family:var(--fh);font-size:17px;font-weight:800;letter-spacing:2px;
+  transition:transform .1s;
+}
+.sum-btn:active{transform:scale(.98)}
+.sum-btn.primary{background:var(--g);color:#000}
+.sum-btn.secondary{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- ── SOURCE SELECTION SCREEN ── -->
+<div id="sourceScreen">
+  <div class="src-logo">BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+  <div class="src-tagline">CHOISIR LA SOURCE</div>
+  <div class="src-cards">
+    <div class="src-card cam" onclick="chooseCamera()">
+      <div class="src-card-icon">📷</div>
+      <div class="src-card-title">CAMÉRA</div>
+      <div class="src-card-sub">Analyse en<br>temps réel</div>
+    </div>
+    <div class="src-card vid" onclick="showDropZone()">
+      <div class="src-card-icon">🎬</div>
+      <div class="src-card-title">VIDÉO</div>
+      <div class="src-card-sub">Importe un<br>fichier vidéo</div>
+    </div>
+  </div>
+  <div class="src-drop" id="srcDrop" onclick="document.getElementById('videoFileInput').click()">
+    <div class="src-card-icon" style="font-size:28px;margin-bottom:8px">📂</div>
+    <div class="src-drop-title">Appuie pour choisir une vidéo</div>
+    <div class="src-drop-sub">MP4 · MOV · AVI · WebM<br>Depuis ta pellicule ou fichiers</div>
+    <input type="file" id="videoFileInput" accept="video/*" style="display:none" onchange="loadVideoFile(this.files[0])">
+  </div>
+</div>
+
+<!-- ── LOADING SCREEN ── -->
+<div id="loadScreen">
+  <div id="loadLogo">BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+  <div class="spinner" id="spinner"></div>
+  <div id="loadMsg">CHARGEMENT DU MODÈLE IA…</div>
+  <button id="startBtn" onclick="showSourceScreen()">DÉMARRER</button>
+</div>
+
+<!-- ── MAIN STAGE ── -->
+<div id="stage" style="display:none">
+  <video id="camVideo" autoplay playsinline muted></video>
+  <video id="videoSource" playsinline muted></video>
+  <canvas id="overlay"></canvas>
+
+  <!-- Video mode badge -->
+  <div id="videoModeBadge">🎬 MODE VIDÉO</div>
+
+  <div id="hint">Pointe la caméra<br>vers le terrain</div>
+
+  <!-- Top bar -->
+  <div id="topbar">
+    <div class="logo">🏸 BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+    <div id="liveBadge">EN ATTENTE</div>
+    <div id="recIndicator"><div id="recDot"></div><span id="recDuration">00:00</span></div>
+    <div id="scoreBox">0 — 0</div>
+  </div>
+
+  <!-- Camera flip -->
+  <div id="flipBtn" onclick="flipCamera()">🔄</div>
+
+  <!-- Shot flash -->
+  <div id="shotFlash"></div>
+
+  <!-- Rally badge -->
+  <div id="rallyBadge">ÉCHANGE EN COURS</div>
+
+  <!-- Service badge -->
+  <div id="serviceBadge"><span id="serviceTxt">SERVICE</span><small id="serviceServer"></small></div>
+
+  <!-- Calibration done badge -->
+  <div id="calibBadge">📐 TERRAIN CALIBRÉ</div>
+
+  <!-- Overlay luminosité adaptative -->
+  <div id="overlayDim"></div>
+
+  <!-- Bouton réglages (coin haut gauche) -->
+  <div id="settingsBtn" onclick="openSettings()"
+    style="position:absolute;top:calc(var(--safe-t)+10px);left:14px;z-index:15;
+    width:36px;height:36px;background:var(--bg2);border:1px solid var(--border);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:16px;cursor:pointer;transition:all .15s;">⚙️</div>
+
+  <!-- Calibration overlay -->
+  <div id="calibOverlay">
+    <div id="calibTop">
+      <div id="calibTitle">📐 CALIBRATION</div>
+      <div id="calibInstruction">Tape les 4 coins du terrain</div>
+      <div id="calibCancel" onclick="cancelCalib()">ANNULER</div>
+    </div>
+    <div id="calibStep">
+      <div class="calib-dot current" id="cdot0"></div>
+      <div class="calib-dot" id="cdot1"></div>
+      <div class="calib-dot" id="cdot2"></div>
+      <div class="calib-dot" id="cdot3"></div>
+    </div>
+    <canvas id="calibCanvas"></canvas>
+    <button id="calibDone" onclick="finishCalib()">✓ VALIDER</button>
+  </div>
+
+  <!-- Stats bottom bar -->
+  <div id="statsBar">
+    <div class="stats-row">
+      <div class="stat-cell"><div class="sv" style="color:var(--g)" id="sTot">0</div><div class="sl">Frappes</div></div>
+      <div class="stat-cell"><div class="sv" style="color:var(--c)" id="sShuttle">—</div><div class="sl">Volant</div></div>
+      <div class="stat-cell"><div class="sv" style="color:var(--y)" id="sRhythm">—</div><div class="sl">/ min</div></div>
+      <div class="stat-cell"><div class="sv" style="color:var(--b)" id="sFPS">—</div><div class="sl">FPS</div></div>
+    </div>
+    <div class="ctrl-row" style="gap:8px">
+      <div class="ctrl-btn" onclick="togglePanel()" style="padding:8px 10px;min-width:52px"><div class="ctrl-icon">📊</div>STATS</div>
+      <div class="ctrl-btn primary" id="recBtn" onclick="toggleAnalysis()" style="padding:8px 10px;min-width:52px"><div class="ctrl-icon">▶</div>ANALYSER</div>
+      <div class="ctrl-btn" id="vidBtn" onclick="toggleRecord()" style="padding:8px 10px;min-width:52px"><div class="ctrl-icon">⏺</div>REC</div>
+      <div class="ctrl-btn" onclick="startCalib()" id="calibBtn" style="padding:8px 10px;min-width:52px"><div class="ctrl-icon">📐</div>CALIB</div>
+      <div class="ctrl-btn" id="minBtn" onclick="toggleMinimal()" style="padding:8px 10px;min-width:52px"><div class="ctrl-icon">◎</div>MIN</div>
+      <div class="ctrl-btn" onclick="showSummary()" style="padding:8px 10px;min-width:52px"><div class="ctrl-icon">🏁</div>FIN</div>
+    </div>
+  </div>
+
+  <!-- Video progress bar (mode vidéo uniquement) -->
+  <div id="videoProgressBar">
+    <div class="vpb-track" id="vpbTrack">
+      <div class="vpb-fill" id="vpbFill" style="width:0%"></div>
+    </div>
+    <div class="vpb-row">
+      <div class="vpb-time" id="vpbTime">0:00 / 0:00</div>
+      <div class="vpb-btn" id="vpbPlay" onclick="toggleVideoPlay()">⏸ PAUSE</div>
+      <div class="vpb-btn" onclick="setVideoSpeed(0.25)">× 0.25</div>
+      <div class="vpb-btn" onclick="setVideoSpeed(0.5)">× 0.5</div>
+      <div class="vpb-btn on" id="vpbSpeed1" onclick="setVideoSpeed(1)">× 1</div>
+      <div class="vpb-btn" onclick="setVideoSpeed(2)">× 2</div>
+      <div class="vpb-btn" onclick="changeVideoSource()">⏏ CHANGER</div>
+    </div>
+  </div>
+
+  <!-- Save modal -->
+  <div id="saveModal">
+    <video id="previewVid" controls playsinline></video>
+    <div class="modal-bar">
+      <div class="modal-title">VIDÉO ENREGISTRÉE</div>
+      <div class="modal-meta" id="modalMeta">—</div>
+      <div class="modal-actions">
+        <button class="modal-btn cl" onclick="closeSaveModal()">FERMER</button>
+        <button class="modal-btn dl" id="dlBtn">⬇ TÉLÉCHARGER</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ SUMMARY SCREEN ══════════════════════════════════════ -->
+<div id="summaryScreen">
+  <div id="sumHeader">
+    <div id="sumHeaderLogo">BAD<em>COACH</em> <span style="font-size:.6em;letter-spacing:2px;color:var(--muted)">LIVE</span></div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--muted)">RÉSUMÉ</div>
+    <div id="sumDate"></div>
+  </div>
+
+  <div id="sumBody">
+
+    <!-- Score -->
+    <div id="sumScore">
+      <div id="sumScoreNum">0 — 0</div>
+      <div id="sumScoreLabel">SCORE FINAL</div>
+      <div id="sumDuration"></div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="sum-kpis">
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--g)" id="skTot">0</div><div class="sum-kpi-lbl">Frappes</div></div>
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--y)" id="skRpm">—</div><div class="sum-kpi-lbl">/ minute</div></div>
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--c)" id="skRallies">0</div><div class="sum-kpi-lbl">Échanges</div></div>
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--b)" id="skAvgRally">—</div><div class="sum-kpi-lbl">Durée moy.</div></div>
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--p)" id="skServeTop">0</div><div class="sum-kpi-lbl">Services J1</div></div>
+      <div class="sum-kpi"><div class="sum-kpi-val" style="color:var(--p)" id="skServeBot">0</div><div class="sum-kpi-lbl">Services J2</div></div>
+    </div>
+    <!-- Calib badge summary -->
+    <div id="skCalibRow" style="display:none;margin-bottom:14px;padding:8px 12px;background:rgba(0,230,118,.07);border:1px solid rgba(0,230,118,.2);border-radius:8px;font-family:var(--fm);font-size:10px;color:var(--g);letter-spacing:1px">
+      📐 Session avec terrain calibré — zones en coordonnées réelles
+    </div>
+
+    <!-- Donut chart -->
+    <div class="sum-section">Répartition des frappes</div>
+    <div class="sum-chart-wrap">
+      <div id="donutWrap">
+        <canvas id="donutCanvas" width="110" height="110"></canvas>
+        <div class="donut-legend" id="donutLegend"></div>
+      </div>
+    </div>
+
+    <!-- Rally timeline -->
+    <div class="sum-section">Durée des échanges</div>
+    <div class="sum-chart-wrap" style="padding:10px 10px 6px">
+      <canvas id="rallyCanvas" height="0"></canvas>
+      <div id="rallyEmpty" style="text-align:center;font-family:var(--fm);font-size:10px;color:var(--muted);padding:16px 0">Aucun échange enregistré</div>
+    </div>
+
+    <!-- Heatmaps -->
+    <div class="sum-section">Zones de jeu</div>
+    <div class="sum-chart-wrap">
+      <div class="sum-courts">
+        <div class="sum-court-wrap"><svg class="sum-csw" id="sumCJ1" viewBox="0 0 110 148"></svg><div class="sum-court-lbl">J1</div></div>
+        <div class="sum-court-wrap"><svg class="sum-csw" id="sumCJ2" viewBox="0 0 110 148"></svg><div class="sum-court-lbl">J2</div></div>
+      </div>
+    </div>
+
+    <!-- Insight auto-généré -->
+    <div class="sum-section">Analyse</div>
+    <div class="sum-insight" id="sumInsight"></div>
+
+  </div>
+</div>
+
+<!-- Summary fixed actions -->
+<div id="sumActions">
+  <button class="sum-btn primary" id="sumShareBtn" onclick="shareSummary()">📤 PARTAGER EN IMAGE</button>
+  <button class="sum-btn secondary" onclick="openTraining()" style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);color:var(--g)">🧠 PLAN D'ENTRAÎNEMENT IA</button>
+  <button class="sum-btn secondary" onclick="newSession()">↺ NOUVELLE SESSION</button>
+</div>
+
+  <div id="detailPanel">
+    <div class="panel-handle"></div>
+    <div class="panel-title">Analyse du match</div>
+
+    <div class="dcard">
+      <div class="dcard-t">Score & Échanges</div>
+      <div class="big-grid">
+        <div class="bc"><div class="bn" style="color:var(--g)" id="dTot">0</div><div class="blab">Frappes</div></div>
+        <div class="bc"><div class="bn" style="color:var(--y)" id="dRhythm">—</div><div class="blab">/ min</div></div>
+        <div class="bc"><div class="bn" style="color:var(--c)" id="dRallies">0</div><div class="blab">Échanges</div></div>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-t">Répartition des frappes</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-t">Joueurs détectés</div>
+      <div class="mrow"><span class="ml" style="color:var(--g)">Joueur 1</span><span class="mv" style="color:var(--g)" id="dp1">—</span></div>
+      <div class="mrow"><span class="ml" style="color:var(--b)">Joueur 2</span><span class="mv" style="color:var(--b)" id="dp2">—</span></div>
+      <div class="mrow"><span class="ml">Volant</span><span class="mv" id="dShuttle">—</span></div>
+      <div class="mrow"><span class="ml" style="color:var(--p)">Services J1 / J2</span><span class="mv" style="color:var(--p)" id="dServes">0 / 0</span></div>
+      <div class="mrow"><span class="ml">Terrain calibré</span><span class="mv" id="dCalib">—</span></div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-t">Heatmap terrain</div>
+      <div class="courts-row">
+        <div class="court-wrap"><svg class="csw" id="cJ1" viewBox="0 0 110 148"></svg><div class="court-lbl">J1</div></div>
+        <div class="court-wrap"><svg class="csw" id="cJ2" viewBox="0 0 110 148"></svg><div class="court-lbl">J2</div></div>
+      </div>
+    </div>
+
+    <div class="dcard">
+      <div class="dcard-t">Chronologie</div>
+      <div class="tl-list" id="timeline"></div>
+    </div>
+  </div>
+
+<!-- ══ SETTINGS PANEL ═════════════════════════════════════ -->
+<div id="settingsPanel">
+  <header>
+    <h2>⚙️ RÉGLAGES</h2>
+    <span class="sp-close" onclick="closeSettings()">✕</span>
+  </header>
+
+  <div class="sp-section">Source</div>
+  <div class="sp-btn-row">
+    <button class="sp-btn" onclick="closeSettings();document.getElementById('videoFileInput').click()">🎬 Importer une vidéo</button>
+    <button class="sp-btn" onclick="closeSettings();changeVideoSource()">📷 Revenir caméra</button>
+  </div>
+
+  <div class="sp-section">Détection</div>
+  <div class="sp-row">
+    <div><div class="sp-lbl">Filtre de Kalman</div><div class="sp-sub">Lisse la trajectoire du volant</div></div>
+    <div class="sp-toggle on" id="togKalman" onclick="spToggle('kalman',this)"></div>
+  </div>
+  <div class="sp-row">
+    <div><div class="sp-lbl">Calibration auto du filet</div><div class="sp-sub">Détection par analyse d'image</div></div>
+    <div class="sp-toggle on" id="togAutoNet" onclick="spToggle('autoNet',this)"></div>
+  </div>
+  <div class="sp-slider-row">
+    <div class="sp-slider-lbl"><span>Luminosité seuil volant</span><b id="brightVal">200</b></div>
+    <input type="range" min="140" max="240" step="5" value="200" id="brightSlider"
+      oninput="document.getElementById('brightVal').textContent=this.value;CFG.SHUTTLE_BRIGHT=+this.value;prefs.shuttleBright=+this.value">
+  </div>
+
+  <div class="sp-section">Interface</div>
+  <div class="sp-row">
+    <div><div class="sp-lbl">Retour haptique</div><div class="sp-sub">Vibration sur chaque frappe</div></div>
+    <div class="sp-toggle on" id="togHaptic" onclick="spToggle('haptic',this)"></div>
+  </div>
+  <div class="sp-row">
+    <div><div class="sp-lbl">Luminosité adaptative</div><div class="sp-sub">Overlay selon l'ambiance</div></div>
+    <div class="sp-toggle on" id="togAdaptBright" onclick="spToggle('adaptBright',this)"></div>
+  </div>
+  <div class="sp-row">
+    <div><div class="sp-lbl">Sons</div><div class="sp-sub">Bip à chaque frappe détectée</div></div>
+    <div class="sp-toggle" id="togSound" onclick="spToggle('sound',this)"></div>
+  </div>
+
+  <div class="sp-section">IA — Clé API Anthropic</div>
+  <div class="sp-row" style="flex-direction:column;align-items:stretch;gap:8px">
+    <div class="sp-sub">Nécessaire pour le mode entraînement IA et le score automatique</div>
+    <input class="sp-input" type="password" id="apiKeyInput" placeholder="sk-ant-api03-…"
+      oninput="prefs.apiKey=this.value;savePrefs()">
+    <div class="sp-sub" id="apiKeyStatus"></div>
+  </div>
+
+  <div class="sp-section">Historique des sessions</div>
+  <div class="sp-history-list" id="historyList"></div>
+  <div class="sp-btn-row">
+    <button class="sp-btn danger" onclick="clearHistory()">Effacer l'historique</button>
+    <button class="sp-btn" onclick="exportAllHistory()">Exporter JSON</button>
+  </div>
+</div>
+
+<!-- ══ TRAINING PANEL ════════════════════════════════════ -->
+<div id="trainingPanel">
+  <header>
+    <h2>🧠 ENTRAÎNEMENT IA</h2>
+    <span class="sp-close" onclick="closeTraining()">✕</span>
+  </header>
+  <div class="tp-body" id="tpBody">
+    <div class="tp-loading" id="tpLoading">
+      <div class="tp-spinner"></div>
+      <div class="tp-msg">ANALYSE DE TA SESSION…</div>
+    </div>
+  </div>
+  <div class="tp-btn-row" id="tpBtns" style="display:none">
+    <button class="tp-btn primary" onclick="regenerateTraining()">↺ Régénérer</button>
+    <button class="tp-btn secondary" onclick="closeTraining()">Fermer</button>
+  </div>
+</div>
+
+<!-- TF.js + COCO-SSD -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════════════
+// Polyfill roundRect pour iOS < 15.4
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+    r=Math.min(r,w/2,h/2);
+    this.beginPath();
+    this.moveTo(x+r,y);
+    this.lineTo(x+w-r,y);
+    this.quadraticCurveTo(x+w,y,x+w,y+r);
+    this.lineTo(x+w,y+h-r);
+    this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    this.lineTo(x+r,y+h);
+    this.quadraticCurveTo(x,y+h,x,y+h-r);
+    this.lineTo(x,y+r);
+    this.quadraticCurveTo(x,y,x+r,y);
+    this.closePath();
+  };
+}
+const CFG = {
+  SHUTTLE_BRIGHT: 200,   // Seuil de luminosité du volant
+  SHUTTLE_MIN_R:  2,
+  SHUTTLE_MAX_R:  20,
+  TRAIL_LEN:      28,
+  YOLO_EVERY:     6,     // Détecte les joueurs tous les N frames
+  SHOT_MIN_SPD:   8,
+  SHOT_COOLDOWN:  12,    // Frames entre deux frappes
+  C_P1: '#00e676',
+  C_P2: '#3d8eff',
+  C_SH: '#00e5ff',
+  C_NET:'#ffc400',
+};
+
+const SHOT_CSS = {smash:'#ff4444',dégagé:'#00e676',amorti:'#3d8eff',drive:'#ffc400',service:'#d500f9',inconnu:'rgba(255,255,255,.5)'};
+const SHOT_LBL = {smash:'SMASH',dégagé:'DÉGAGÉ',amorti:'AMORTI',drive:'DRIVE',service:'SERVICE',inconnu:'?'};
+const ZONES_GRID = [
+  ['fG','fC','fD'],
+  ['mG','mC','mD'],
+  ['nG','nC','nD'],
+];
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let model=null, stream=null, animId=null;
+let isAnalyzing=false, facingMode='environment';
+let frameIdx=0, startTime=Date.now();
+let fpsArr=[], lastFPSTime=Date.now();
+
+// ── MediaRecorder state ────────────────────────────────────
+let mediaRec=null, recChunks=[], isRecording=false;
+let recStartTime=0, recTimerInterval=null;
+let recCanvas=null, recCtx=null, recStream=null;
+
+// ── Video file mode state ──────────────────────────────────
+let videoMode=false;           // true quand on analyse une vidéo fichier
+let videoFileUrl=null;         // object URL du fichier
+let videoAnalysisRunning=false;
+let videoFrameTimer=null;
+
+// Shuttle tracker
+const shuttle = {
+  trail: [],
+  lastPos: null,
+  speeds: [],
+  get speed(){ return this.speeds.length ? this.speeds.reduce((a,b)=>a+b)/this.speeds.length : 0 },
+};
+
+// Players
+const players = { list:[], zoneHist:{1:{},2:{}} };
+
+// Shots
+const shots = { history:[], counts:{smash:0,dégagé:0,amorti:0,drive:0,inconnu:0}, lastFrame:-30 };
+
+// Rally
+const rally = {
+  state:'idle', score:{top:0,bot:0},
+  current:null, all:[], events:[],
+  noSh:0, sh:0, lastY:null, netY:null,
+  bounceBuf:[],
+};
+
+// Zone counts
+const zoneCounts = {1:{},2:{}};
+
+// ── Calibration state ─────────────────────────────────────
+const calib = {
+  active: false,
+  done:   false,
+  step:   0,
+  points: [],       // 4 × [canvasX, canvasY]
+  H:      null,     // 3×3 homography image→terrain [0,1]²
+};
+// Ordre des 4 coins : fond-gauche, fond-droit, filet-gauche, filet-droit
+const CALIB_LABELS  = ['FOND GAUCHE','FOND DROIT','FILET GAUCHE','FILET DROIT'];
+const CALIB_COLORS  = ['#00e676','#3d8eff','#ffc400','#ff4444'];
+// Points correspondants dans le terrain normalisé [0,1]²
+const TERRAIN_NORM  = [[0,0],[1,0],[0,1],[1,1]];
+
+// ── Service detection state ───────────────────────────────
+const serve = {
+  count:    {top:0, bot:0},
+  history:  [],
+  checkBuf: [],     // positions volant des N premières frames d'un échange
+  checking: false,  // on collecte actuellement le buffer de service
+  framesLeft: 0,
+};
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+async function init(){
+  // ── Vérification immédiate de la compatibilité iOS ──────
+  const isSecure = location.protocol==='https:'
+    || location.hostname==='localhost'
+    || location.hostname==='127.0.0.1'
+    || location.protocol==='file:';
+  const hasAPI = !!(navigator.mediaDevices?.getUserMedia
+    || navigator.getUserMedia || navigator.webkitGetUserMedia);
+
+  if(!isSecure || !hasAPI){
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('loadMsg').textContent='';
+    showCameraError(!hasAPI, !isSecure);
+    return;
+  }
+
+  // ── Chargement du modèle IA ──────────────────────────────
+  document.getElementById('loadMsg').textContent='CHARGEMENT DU MODÈLE IA…';
+  try{
+    model = await cocoSsd.load({base:'lite_mobilenet_v2'});
+    document.getElementById('loadMsg').textContent='MODÈLE PRÊT ✓';
+  }catch(e){
+    document.getElementById('loadMsg').textContent='MODE VISION CLASSIQUE';
+    model=null;
+  }
+  setTimeout(()=>{
+    document.getElementById('spinner').style.display='none';
+    document.getElementById('startBtn').style.display='block';
+    document.getElementById('loadMsg').textContent='APPUIE POUR COMMENCER';
+  },400);
+}
+
+function showSourceScreen(){
+  document.getElementById('loadScreen').style.display='none';
+  document.getElementById('sourceScreen').className='show';
+}
+
+function chooseCamera(){
+  document.getElementById('sourceScreen').className='';
+  document.getElementById('stage').style.display='block';
+  videoMode=false;
+  switchCamera();
+}
+
+function showDropZone(){
+  document.getElementById('srcDrop').className='src-drop show';
+}
+
+// ── Drag & drop sur la zone source ────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  const drop=document.getElementById('srcDrop');
+  if(!drop) return;
+  drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
+  drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+  drop.addEventListener('drop',e=>{
+    e.preventDefault(); drop.classList.remove('over');
+    const f=e.dataTransfer?.files?.[0];
+    if(f&&f.type.startsWith('video/')) loadVideoFile(f);
+  });
+});
+
+function getCameraAPI(){
+  // iOS Safari < 11 utilise l'ancienne API préfixée
+  if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+    return (c)=>navigator.mediaDevices.getUserMedia(c);
+  const legacy = navigator.getUserMedia
+    || navigator.webkitGetUserMedia
+    || navigator.mozGetUserMedia
+    || navigator.msGetUserMedia;
+  if(legacy)
+    return (c)=>new Promise((res,rej)=>legacy.call(navigator,c,res,rej));
+  return null;
+}
+
+async function startCamera(){
+  // Sur iOS, getUserMedia n'est disponible qu'en HTTPS ou localhost
+  const isSecure = location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1';
+  const api = getCameraAPI();
+
+  if(!api || !isSecure){
+    showCameraError(!api, !isSecure);
+    return;
+  }
+
+  document.getElementById('loadScreen').style.display='none';
+  document.getElementById('stage').style.display='block';
+  await switchCamera();
+}
+
+function showCameraError(noAPI, notSecure){
+  const msg = document.getElementById('loadMsg');
+  const btn = document.getElementById('startBtn');
+  document.getElementById('spinner').style.display='none';
+  btn.style.display='none';
+
+  if(notSecure){
+    msg.innerHTML=`<span style="color:#ff4444;line-height:2">⚠️ HTTPS REQUIS SUR iOS<br><span style="font-size:9px;opacity:.7">Safari bloque la caméra sur HTTP.<br>Ouvre cette page via HTTPS ou AirDrop<br>le fichier directement sur ton iPhone.</span></span>`;
+  } else {
+    msg.innerHTML=`<span style="color:#ff4444">❌ CAMÉRA NON SUPPORTÉE<br><span style="font-size:9px;opacity:.7">Utilise Safari sur iOS 11+</span></span>`;
+  }
+
+  // Bouton pour ouvrir le fichier via AirDrop / instructions
+  const helpBtn=document.createElement('button');
+  helpBtn.id='startBtn';
+  helpBtn.style.cssText='padding:12px 24px;background:rgba(0,230,118,.15);color:#00e676;border:1px solid #00e676;border-radius:8px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:800;letter-spacing:2px;cursor:pointer;margin-top:12px;display:block';
+  helpBtn.textContent='VOIR LES INSTRUCTIONS';
+  helpBtn.onclick=()=>showInstructions();
+  document.getElementById('loadScreen').appendChild(helpBtn);
+}
+
+function showInstructions(){
+  const screen=document.getElementById('loadScreen');
+  screen.innerHTML=`
+  <div style="padding:24px;max-width:340px;text-align:center;font-family:Barlow Condensed,sans-serif">
+    <div style="font-size:28px;font-weight:800;letter-spacing:3px;margin-bottom:20px">BAD<em style="color:#00e676;font-style:normal">COACH</em> <span style="font-size:.55em;letter-spacing:2px;color:rgba(255,255,255,.4)">LIVE</span></div>
+    <div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:10px;padding:16px;margin-bottom:14px;text-align:left">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676;margin-bottom:10px">✅ MÉTHODE 1 — AIRDROP (recommandé)</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:2">
+        1. Envoie ce fichier HTML par <b style="color:#fff">AirDrop</b> sur ton iPhone<br>
+        2. Ouvre-le avec <b style="color:#fff">Safari</b><br>
+        3. Autorise la caméra quand Safari demande<br>
+        4. L'app fonctionne directement ✓
+      </div>
+    </div>
+    <div style="background:rgba(68,138,255,.08);border:1px solid rgba(68,138,255,.3);border-radius:10px;padding:16px;margin-bottom:14px;text-align:left">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#3d8eff;margin-bottom:10px">✅ MÉTHODE 2 — SERVEUR LOCAL</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:2">
+        Sur ton Mac (même WiFi) :<br>
+        <code style="background:rgba(255,255,255,.1);padding:4px 8px;border-radius:4px;font-size:11px;display:block;margin:6px 0">python3 -m http.server 8080</code>
+        Sur iPhone Safari :<br>
+        <code style="background:rgba(255,255,255,.1);padding:4px 8px;border-radius:4px;font-size:11px;display:block;margin:6px 0">http://IP_MAC:8080/BadCoachLive.html</code>
+        <span style="color:rgba(255,100,100,.8)">⚠️ Ne fonctionne pas (HTTP bloqué)</span>
+      </div>
+    </div>
+    <div style="background:rgba(255,196,0,.08);border:1px solid rgba(255,196,0,.3);border-radius:10px;padding:16px;text-align:left">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:#ffc400;margin-bottom:10px">✅ MÉTHODE 3 — HÉBERGE SUR OVH</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:2">
+        Mets le fichier sur ton serveur OVH<br>en HTTPS → ça marche partout ✓
+      </div>
+    </div>
+  </div>`;
+}
+
+async function switchCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); }
+  const api=getCameraAPI();
+  if(!api) return;
+
+  // iOS requiert des contraintes simples d'abord, puis on affine
+  const constraints=[
+    {video:{facingMode, width:{ideal:1280}, height:{ideal:720}}, audio:false},
+    {video:{facingMode}, audio:false},
+    {video:true, audio:false},
+  ];
+
+  let ok=false;
+  for(const c of constraints){
+    try{
+      stream=await api(c);
+      ok=true; break;
+    }catch(e){
+      console.warn('Camera constraint failed, trying simpler:',e.message);
+    }
+  }
+
+  if(!ok){
+    alert('Caméra inaccessible.\nVérifie que Safari a la permission caméra dans\nRéglages > Safari > Caméra.');
+    return;
+  }
+
+  const vid=document.getElementById('camVideo');
+  vid.srcObject=stream;
+  // iOS a besoin de playsInline et muted pour autoplay
+  vid.setAttribute('playsinline','');
+  vid.setAttribute('muted','');
+  vid.muted=true;
+  try{ await vid.play(); }catch(e){ console.warn('Play error:',e); }
+  resizeOverlay();
+  document.getElementById('hint').style.opacity='1';
+  setTimeout(()=>document.getElementById('hint').style.opacity='0',3000);
+}
+
+function flipCamera(){
+  facingMode = facingMode==='environment'?'user':'environment';
+  const vid=document.getElementById('camVideo');
+  vid.style.transform = facingMode==='user'?'scaleX(-1)':'scaleX(1)';
+  switchCamera();
+}
+
+async function requestCameraPermission(){
+  const api=getCameraAPI();
+  if(!api) return false;
+  try{
+    const s=await api({video:true,audio:false});
+    s.getTracks().forEach(t=>t.stop());
+    return true;
+  }catch(e){ return false; }
+}
+
+function resizeOverlay(){
+  const vid=document.getElementById('camVideo');
+  const cvs=document.getElementById('overlay');
+  cvs.width=vid.videoWidth||640;
+  cvs.height=vid.videoHeight||480;
+  // Si calibration faite, le netY vient des points calibrés
+  if(!calib.done) rally.netY = cvs.height * 0.5;
+  // Resize also the calib canvas
+  const ccvs=document.getElementById('calibCanvas');
+  ccvs.width=cvs.width; ccvs.height=cvs.height;
+}
+
+// ══════════════════════════════════════════════════════════
+//  HOMOGRAPHIE (terrain calibré)
+// ══════════════════════════════════════════════════════════
+
+// Gaussian elimination — résout le système linéaire 8×8 pour la matrice H
+function gaussElim(A, b){
+  const n=8;
+  const M=A.map((row,i)=>[...row, b[i]]);
+  for(let col=0;col<n;col++){
+    let maxR=col;
+    for(let r=col+1;r<n;r++) if(Math.abs(M[r][col])>Math.abs(M[maxR][col])) maxR=r;
+    [M[col],M[maxR]]=[M[maxR],M[col]];
+    const piv=M[col][col];
+    if(Math.abs(piv)<1e-10) continue;
+    for(let r=0;r<n;r++){
+      if(r===col) continue;
+      const f=M[r][col]/piv;
+      for(let k=col;k<=n;k++) M[r][k]-=f*M[col][k];
+    }
+    for(let k=col;k<=n;k++) M[col][k]/=piv;
+  }
+  return M.map(row=>row[n]);
+}
+
+// Calcule la matrice homographique srcPts (image) → dstPts (terrain normalisé)
+function computeH(srcPts, dstPts){
+  const A=[], b=[];
+  for(let i=0;i<4;i++){
+    const [x,y]=srcPts[i], [u,v]=dstPts[i];
+    A.push([x,y,1,0,0,0,-x*u,-y*u]); b.push(u);
+    A.push([0,0,0,x,y,1,-x*v,-y*v]); b.push(v);
+  }
+  const h=gaussElim(A,b);
+  return [[h[0],h[1],h[2]],[h[3],h[4],h[5]],[h[6],h[7],1]];
+}
+
+// Applique H sur un point image → retourne [u,v] normalisé [0,1]²
+function applyH(H,[px,py]){
+  const w=H[2][0]*px+H[2][1]*py+H[2][2];
+  return [(H[0][0]*px+H[0][1]*py+H[0][2])/w,
+          (H[1][0]*px+H[1][1]*py+H[1][2])/w];
+}
+
+// Interpole bilinéaire entre les 4 coins pour un point normalisé (u,v)
+function lerpCorners(pts, u, v){
+  // pts = [fondG, fondD, filetG, filetD]
+  const topX = pts[0][0]*(1-u)+pts[1][0]*u;
+  const topY = pts[0][1]*(1-u)+pts[1][1]*u;
+  const botX = pts[2][0]*(1-u)+pts[3][0]*u;
+  const botY = pts[2][1]*(1-u)+pts[3][1]*u;
+  return [topX*(1-v)+botX*v, topY*(1-v)+botY*v];
+}
+
+// Zone depuis coordonnées image, avec ou sans calibration
+function getZoneCalib(px, py, W, H){
+  if(calib.done && calib.H){
+    const [u,v]=applyH(calib.H,[px,py]);
+    if(u<0||u>1||v<0||v>1) return '?';
+    const col=u<0.33?0:u<0.67?1:2;
+    const row=v<0.42?0:v<0.58?1:2;
+    return ZONES_GRID[row][col];
+  }
+  return getZone(px/W, py/H);
+}
+
+function getZone(rx,ry){
+  const col=rx<.33?0:rx<.67?1:2;
+  const row=ry<.42?0:ry<.58?1:2;
+  return ZONES_GRID[row][col];
+}
+
+// ══════════════════════════════════════════════════════════
+//  CALIBRATION — FONCTIONS
+// ══════════════════════════════════════════════════════════
+
+function startCalib(){
+  if(isAnalyzing) toggleAnalysis();
+  calib.active=true; calib.step=0; calib.points=[];
+  document.getElementById('calibOverlay').className='show';
+  const cvs=document.getElementById('overlay');
+  const ccvs=document.getElementById('calibCanvas');
+  ccvs.width=cvs.width||640; ccvs.height=cvs.height||480;
+  updateCalibUI(); renderCalibCanvas();
+  ccvs.addEventListener('touchend',onCalibTouch,{passive:false});
+  ccvs.addEventListener('click',onCalibClick);
+}
+
+function cancelCalib(){
+  calib.active=false;
+  document.getElementById('calibOverlay').className='';
+  const ccvs=document.getElementById('calibCanvas');
+  ccvs.removeEventListener('touchend',onCalibTouch);
+  ccvs.removeEventListener('click',onCalibClick);
+}
+
+function onCalibTouch(e){
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  handleCalibTap(t.clientX,t.clientY);
+}
+function onCalibClick(e){ handleCalibTap(e.clientX,e.clientY); }
+
+function handleCalibTap(clientX,clientY){
+  if(calib.step>=4) return;
+  const ccvs=document.getElementById('calibCanvas');
+  const rect=ccvs.getBoundingClientRect();
+  const cx=Math.round((clientX-rect.left)*(ccvs.width/rect.width));
+  const cy=Math.round((clientY-rect.top)*(ccvs.height/rect.height));
+  calib.points.push([cx,cy]);
+  calib.step++;
+  updateCalibUI(); renderCalibCanvas();
+}
+
+function updateCalibUI(){
+  const steps=['TAPE : FOND GAUCHE','TAPE : FOND DROIT','TAPE : FILET GAUCHE','TAPE : FILET DROIT'];
+  document.getElementById('calibInstruction').textContent=
+    calib.step<4?steps[calib.step]:'✓ Tous les coins sélectionnés';
+  for(let i=0;i<4;i++){
+    const d=document.getElementById(`cdot${i}`);
+    d.className='calib-dot'+(i<calib.step?' done':i===calib.step?' current':'');
+  }
+  document.getElementById('calibDone').style.display=calib.step===4?'block':'none';
+}
+
+function renderCalibCanvas(){
+  const ccvs=document.getElementById('calibCanvas');
+  const ctx=ccvs.getContext('2d');
+  ctx.clearRect(0,0,ccvs.width,ccvs.height);
+  const pts=calib.points;
+  // Polygone
+  if(pts.length>=2){
+    ctx.strokeStyle='rgba(0,230,118,.4)'; ctx.lineWidth=1.5; ctx.setLineDash([8,5]);
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+    if(pts.length===4) ctx.closePath();
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // Points tapés
+  pts.forEach(([x,y],i)=>{
+    ctx.fillStyle=CALIB_COLORS[i];
+    ctx.beginPath(); ctx.arc(x,y,14,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#000'; ctx.font='bold 12px Barlow Condensed,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(i+1,x,y);
+  });
+  // Guidage : croix sur le prochain coin
+  if(calib.step<4){
+    const W=ccvs.width, H=ccvs.height;
+    const guides=[[W*.2,H*.15],[W*.8,H*.15],[W*.2,H*.62],[W*.8,H*.62]];
+    const [gx,gy]=guides[calib.step];
+    const col=CALIB_COLORS[calib.step];
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.globalAlpha=.55;
+    ctx.beginPath(); ctx.moveTo(gx-20,gy); ctx.lineTo(gx+20,gy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx,gy-20); ctx.lineTo(gx,gy+20); ctx.stroke();
+    ctx.beginPath(); ctx.arc(gx,gy,26,0,Math.PI*2); ctx.stroke();
+    ctx.globalAlpha=1;
+    ctx.fillStyle=col; ctx.font='bold 12px Barlow Condensed,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(CALIB_LABELS[calib.step],gx,gy+30);
+  }
+}
+
+function finishCalib(){
+  if(calib.points.length<4) return;
+  calib.H=computeH(calib.points,TERRAIN_NORM);
+  rally.netY=(calib.points[2][1]+calib.points[3][1])/2;
+  calib.done=true; calib.active=false;
+  document.getElementById('calibOverlay').className='';
+  const ccvs=document.getElementById('calibCanvas');
+  ccvs.removeEventListener('touchend',onCalibTouch);
+  ccvs.removeEventListener('click',onCalibClick);
+  document.getElementById('calibBadge').className='show';
+  document.getElementById('calibBtn').style.color='var(--g)';
+  document.getElementById('calibBtn').style.borderColor='var(--g)';
+  saveCalibToPrefs();   // ← persist
+  showToast('Terrain calibré ✓  zones précises activées');
+}
+
+function drawCalibratedCourt(ctx){
+  if(!calib.done||calib.points.length<4) return;
+  const pts=calib.points;
+  // Contour
+  ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1; ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0],pts[0][1]); ctx.lineTo(pts[1][0],pts[1][1]);
+  ctx.lineTo(pts[3][0],pts[3][1]); ctx.lineTo(pts[2][0],pts[2][1]);
+  ctx.closePath(); ctx.stroke();
+  // Grille intérieure
+  ctx.strokeStyle='rgba(255,255,255,.09)'; ctx.setLineDash([4,5]);
+  [1/3,2/3].forEach(u=>{
+    const a=lerpCorners(pts,u,0),b=lerpCorners(pts,u,1);
+    ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+  });
+  [0.42,0.58].forEach(v=>{
+    const a=lerpCorners(pts,0,v),b=lerpCorners(pts,1,v);
+    ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  // Filet
+  ctx.strokeStyle=CFG.C_NET; ctx.lineWidth=2; ctx.setLineDash([8,5]);
+  ctx.beginPath(); ctx.moveTo(pts[2][0],pts[2][1]); ctx.lineTo(pts[3][0],pts[3][1]);
+  ctx.stroke(); ctx.setLineDash([]);
+  // Petits coins
+  pts.forEach(([x,y],i)=>{
+    ctx.fillStyle=CALIB_COLORS[i];
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  SERVICE DETECTION
+// ══════════════════════════════════════════════════════════
+
+function triggerServeCheck(){
+  // Appelé dès qu'un échange démarre — collecte les 12 prochaines positions
+  serve.checking=true;
+  serve.framesLeft=12;
+  serve.checkBuf=[];
+}
+
+function updateServeCheck(shuttlePos, W, H){
+  if(!serve.checking) return;
+  if(shuttlePos) serve.checkBuf.push(shuttlePos);
+  serve.framesLeft--;
+  if(serve.framesLeft>0) return;
+  // Analyse
+  serve.checking=false;
+  const buf=serve.checkBuf;
+  if(buf.length<4) return;
+
+  const netY = rally.netY || H*0.5;
+  const first=buf[0], last=buf[buf.length-1];
+  const dy=last[1]-first[1];  // négatif = monte dans l'image
+  const goingUp=dy<-12;
+
+  if(!goingUp) return; // pas de montée initiale → pas un service
+
+  // Qui sert ? celui dont le volant part le plus proche
+  const fromBot=first[1]>netY*1.05;
+  const fromTop=first[1]<netY*0.95;
+  if(!fromBot && !fromTop) return;
+
+  const server=fromBot?'bot':'top';
+  serve.count[server]++;
+  const ts=(Date.now()-startTime)/1000;
+  serve.history.push({time:ts,server,rally:rally.current?.idx});
+
+  // Flash service
+  const serverLbl=server==='top'?'J1 (haut)':'J2 (bas)';
+  document.getElementById('serviceTxt').textContent='SERVICE';
+  document.getElementById('serviceServer').textContent=serverLbl;
+  const badge=document.getElementById('serviceBadge');
+  badge.className=''; void badge.offsetWidth;
+  badge.className='show';
+  // Ajoute à la timeline
+  addTimeline(ts.toFixed(1),'service');
+}
+
+// ══════════════════════════════════════════════════════════
+//  SHUTTLE DETECTION (vision classique JS)
+// ══════════════════════════════════════════════════════════
+function detectShuttle(imageData, W, H){
+  const data=imageData.data;
+  // Cherche des blobs brillants de taille appropriée
+  const bright=new Uint8Array(W*H);
+  for(let i=0;i<W*H;i++){
+    const idx=i*4;
+    const lum=(data[idx]*0.299+data[idx+1]*0.587+data[idx+2]*0.114);
+    bright[i]=lum>CFG.SHUTTLE_BRIGHT?1:0;
+  }
+
+  // Labelling simple par flood fill
+  const labels=new Int32Array(W*H);
+  let lcount=0;
+  const blobs={};
+
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const i=y*W+x;
+      if(!bright[i]||labels[i]) continue;
+      lcount++;
+      const queue=[i]; labels[i]=lcount;
+      let minX=x,maxX=x,minY=y,maxY=y,size=0;
+      while(queue.length){
+        const ci=queue.pop(); size++;
+        const cx=ci%W, cy=Math.floor(ci/W);
+        if(cx<minX)minX=cx; if(cx>maxX)maxX=cx;
+        if(cy<minY)minY=cy; if(cy>maxY)maxY=cy;
+        [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+          const ni=ci+dy*W+dx;
+          if(ni>=0&&ni<W*H&&bright[ni]&&!labels[ni]&&cx+dx>=0&&cx+dx<W){labels[ni]=lcount;queue.push(ni)}
+        });
+      }
+      const r=Math.max((maxX-minX)/2,(maxY-minY)/2);
+      if(r>=CFG.SHUTTLE_MIN_R&&r<=CFG.SHUTTLE_MAX_R&&size>8&&size<600){
+        const cx=(minX+maxX)/2, cy=(minY+maxY)/2;
+        // Bonus de proximité
+        let prox=1.0;
+        if(shuttle.lastPos){
+          const d=Math.hypot(cx-shuttle.lastPos[0],cy-shuttle.lastPos[1]);
+          if(d<W*.12) prox=1.4;
+        }
+        blobs[lcount]={cx,cy,r,score:prox*(1-(r/CFG.SHUTTLE_MAX_R)*.5)};
+      }
+    }
+  }
+
+  if(!Object.keys(blobs).length) return null;
+  const best=Object.values(blobs).sort((a,b)=>b.score-a.score)[0];
+  return best.score>.2?[Math.round(best.cx),Math.round(best.cy)]:null;
+}
+
+function updateShuttle(pos){
+  shuttle.trail.push(pos);
+  if(shuttle.trail.length>CFG.TRAIL_LEN) shuttle.trail.shift();
+  if(pos&&shuttle.lastPos){
+    const spd=Math.hypot(pos[0]-shuttle.lastPos[0],pos[1]-shuttle.lastPos[1]);
+    shuttle.speeds.push(spd);
+    if(shuttle.speeds.length>15) shuttle.speeds.shift();
+  }
+  if(pos) shuttle.lastPos=pos;
+}
+
+// ══════════════════════════════════════════════════════════
+//  SHOT CLASSIFICATION
+// ══════════════════════════════════════════════════════════
+function classifyShot(){
+  const pts=shuttle.trail.filter(Boolean);
+  if(pts.length<5) return null;
+  if(frameIdx-shots.lastFrame<CFG.SHOT_COOLDOWN) return null;
+  const recent=pts.slice(-8);
+  const dx=recent[recent.length-1][0]-recent[0][0];
+  const dy=recent[recent.length-1][1]-recent[0][1];
+  const spd=Math.hypot(dx,dy);
+  if(spd<CFG.SHOT_MIN_SPD) return null;
+
+  let type;
+  if(Math.abs(dy)>Math.abs(dx)*2&&dy<0) type=spd>25?'smash':'dégagé';
+  else if(Math.abs(dy)>Math.abs(dx)*1.5&&dy>0) type='amorti';
+  else if(Math.abs(dx)>Math.abs(dy)*1.5) type='drive';
+  else type=spd>20?'smash':'dégagé';
+
+  shots.lastFrame=frameIdx;
+  const ts=(Date.now()-startTime)/1000;
+  shots.history.push({time:ts,type});
+  shots.counts[type]=(shots.counts[type]||0)+1;
+  return type;
+}
+
+// ══════════════════════════════════════════════════════════
+//  RALLY DETECTOR
+// ══════════════════════════════════════════════════════════
+function updateRally(shuttlePos, shot){
+  const ts=(Date.now()-startTime)/1000;
+  rally.bounceBuf.push(shuttlePos);
+  if(rally.bounceBuf.length>12) rally.bounceBuf.shift();
+
+  if(shuttlePos){ rally.noSh=0; rally.sh++; rally.lastY=shuttlePos[1]; }
+  else{ rally.noSh++; rally.sh=0; }
+
+  const bounce=checkBounce();
+
+  if(rally.state==='idle'){
+    if(rally.sh>=5){
+      rally.current={idx:rally.all.length+1,startT:ts,shots:0};
+      rally.state='play';
+      rally.events.push({time:ts.toFixed(1),msg:`▶ Échange #${rally.current.idx}`,kind:'start'});
+      triggerServeCheck();  // Déclenche l'analyse du service
+    }
+  } else if(rally.state==='play'){
+    if(shot) rally.current.shots++;
+    let end=null;
+    if(rally.noSh>22) end='floor';
+    else if(bounce) end='floor';
+    else if(shuttlePos&&Math.abs(shuttlePos[1]-(rally.netY||0))<30&&rally.noSh>4) end='net';
+    if(end){
+      const dur=(ts-rally.current.startT);
+      if(dur*1000<400){ rally.current=null; rally.state='idle'; return; }
+      const winner=(rally.lastY||0)>(rally.netY||9999)?'top':'bot';
+      rally.current={...rally.current,endT:ts,dur:dur.toFixed(1),winner};
+      rally.all.push({...rally.current});
+      rally.score[winner]++;
+      const icon={floor:'🟡',net:'🔴',out:'🟠'}[end]||'⚪';
+      const wlbl=winner==='top'?'J1':'J2';
+      rally.events.push({time:ts.toFixed(1),msg:`${icon} Fin #${rally.current.idx} · ${rally.current.shots} coups · ${rally.current.dur}s · pt→${wlbl}`,kind:'end'});
+      rally.current=null; rally.state='transition'; rally.noSh=0;
+    }
+  } else if(rally.state==='transition'){
+    if(rally.noSh>20){ rally.state='idle'; rally.sh=0; }
+  }
+}
+
+function checkBounce(){
+  const pts=rally.bounceBuf.filter(Boolean);
+  if(pts.length<5) return false;
+  const vys=[];
+  for(let i=1;i<pts.length;i++) vys.push(pts[i][1]-pts[i-1][1]);
+  if(vys.length<3) return false;
+  const last=vys[vys.length-1], prev=vys[vys.length-2];
+  return (prev>8&&last<-3)||(Math.abs(prev)>10&&Math.abs(last)<3);
+}
+
+// ══════════════════════════════════════════════════════════
+//  DRAWING
+// ══════════════════════════════════════════════════════════
+function draw(ctx, W, H, shuttlePos, detections, shot){
+  ctx.clearRect(0,0,W,H);
+  if(!isAnalyzing) return;
+
+  // ── Terrain calibré OU filet simple ────────────────────
+  if(calib.done){
+    drawCalibratedCourt(ctx);
+  } else if(rally.netY){
+    ctx.strokeStyle=CFG.C_NET; ctx.lineWidth=1.5; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(0,rally.netY); ctx.lineTo(W,rally.netY); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ── Trail volant ───────────────────────────────────────
+  const pts=shuttle.trail.filter(Boolean);
+  for(let i=1;i<pts.length;i++){
+    const a=i/pts.length;
+    ctx.strokeStyle=`rgba(0,229,255,${a*.7})`;
+    ctx.lineWidth=a*3;
+    ctx.beginPath(); ctx.moveTo(pts[i-1][0],pts[i-1][1]); ctx.lineTo(pts[i][0],pts[i][1]); ctx.stroke();
+  }
+
+  // ── Volant ─────────────────────────────────────────────
+  if(shuttlePos){
+    ctx.strokeStyle=CFG.C_SH; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(shuttlePos[0],shuttlePos[1],11,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(shuttlePos[0],shuttlePos[1],3,0,Math.PI*2); ctx.fill();
+  }
+
+  // ── Joueurs ────────────────────────────────────────────
+  const colors=[CFG.C_P1,CFG.C_P2];
+  detections.forEach((d,i)=>{
+    if(i>1) return;
+    const [x,y,w,h]=d.bbox; const col=colors[i];
+    ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle=col; ctx.font='bold 11px Barlow Condensed,sans-serif';
+    ctx.fillText(`J${i+1}`,x+4,y-5);
+    // Trail
+    const tr=players.list[i]?.trail||[];
+    for(let j=1;j<tr.length;j++){
+      const a=j/tr.length;
+      ctx.strokeStyle=`${col}${Math.round(a*99).toString(16).padStart(2,'0')}`;
+      ctx.lineWidth=a*2;
+      ctx.beginPath(); ctx.moveTo(tr[j-1][0],tr[j-1][1]); ctx.lineTo(tr[j][0],tr[j][1]); ctx.stroke();
+    }
+  });
+
+  // ── Flash frappe ───────────────────────────────────────
+  if(shot){
+    const col=SHOT_CSS[shot]||'#fff';
+    ctx.fillStyle=col; ctx.globalAlpha=.15;
+    ctx.fillRect(0,0,W,H);
+    ctx.globalAlpha=1;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  MAIN LOOP
+// ══════════════════════════════════════════════════════════
+async function loop(){
+  if(!isAnalyzing){ animId=requestAnimationFrame(loop); return; }
+
+  // Source : caméra ou vidéo fichier
+  const vid = videoMode
+    ? document.getElementById('videoSource')
+    : document.getElementById('camVideo');
+
+  const cvs=document.getElementById('overlay');
+  const ctx=cvs.getContext('2d');
+  const W=cvs.width, H=cvs.height;
+
+  if(W===0||H===0||vid.readyState<2){ animId=requestAnimationFrame(loop); return; }
+
+  // En mode vidéo, skip si la vidéo est en pause
+  if(videoMode && vid.paused){ animId=requestAnimationFrame(loop); return; }
+
+  frameIdx++;
+
+  // Capture frame
+  const tmpCvs=document.createElement('canvas');
+  tmpCvs.width=W; tmpCvs.height=H;
+  const tmpCtx=tmpCvs.getContext('2d');
+  tmpCtx.drawImage(vid,0,0,W,H);
+  const imageData=tmpCtx.getImageData(0,0,W,H);
+
+  // ── Shuttle detection ──────────────────────────────────
+  const rawPos=detectShuttle(imageData,W,H);
+  // Kalman filter
+  let shuttlePos=rawPos;
+  if(rawPos&&prefs.kalman){
+    shuttlePos=kalman.update(rawPos[0],rawPos[1]);
+  } else if(!rawPos&&prefs.kalman&&kalman.initialized){
+    // Prédit position même sans détection
+    kalman.predict();
+    const est=kalman.getEstimate();
+    shuttlePos=est; // position estimée
+  } else if(rawPos){
+    shuttlePos=rawPos;
+  }
+  updateShuttle(shuttlePos);
+
+  // ── Auto filet ────────────────────────────────────────
+  autoDetectNet(imageData,W,H);
+
+  // ── Luminosité adaptative ─────────────────────────────
+  updateAdaptiveBrightness(imageData,W,H);
+
+  // ── Player detection (YOLO) ───────────────────────────
+  let detections=[];
+  if(model && frameIdx%CFG.YOLO_EVERY===0){
+    try{
+      const preds = await model.detect(tmpCvs,2);
+      detections = preds.filter(p=>p.class==='person'&&p.score>.45)
+                        .sort((a,b)=>b.score-a.score).slice(0,2);
+      detections.sort((a,b)=>a.bbox[1]-b.bbox[1]);  // sort top to bottom
+
+      detections.forEach((d,i)=>{
+        const cx=d.bbox[0]+d.bbox[2]/2, cy=d.bbox[1]+d.bbox[3]/2;
+        if(!players.list[i]) players.list[i]={trail:[]};
+        players.list[i].trail.push([cx,cy]);
+        if(players.list[i].trail.length>20) players.list[i].trail.shift();
+        const zone=getZoneCalib(cx,cy,W,H);
+        players.list[i].zone=zone;
+        zoneCounts[i+1]=zoneCounts[i+1]||{};
+        zoneCounts[i+1][zone]=(zoneCounts[i+1][zone]||0)+1;
+      });
+      players.lastDet=detections;
+    }catch(e){}
+  } else {
+    detections=players.lastDet||[];
+  }
+
+  // ── Classify shot ──────────────────────────────────────
+  const shot=classifyShot();
+
+  // ── Rally detector ────────────────────────────────────
+  updateRally(shuttlePos,shot?1:0);
+
+  // ── Service check ─────────────────────────────────────
+  updateServeCheck(shuttlePos,W,H);
+
+  // ── Fatigue & tactique ────────────────────────────────
+  if(frameIdx%30===0) updateFatigue();
+  if(shot) onShotEvent(shot);
+
+  // ── Score automatique IA (async, ne bloque pas) ───────
+  if(shuttlePos&&prefs.apiKey) tryAutoScore(shuttlePos,W,H);
+
+  // ── Draw ──────────────────────────────────────────────
+  draw(ctx,W,H,shuttlePos,detections,shot);
+
+  // ── Composite canvas pour l'enregistrement ────────────
+  if(isRecording && recCanvas && recCtx){
+    recCtx.drawImage(vid,0,0,recCanvas.width,recCanvas.height);
+    recCtx.drawImage(cvs,0,0,recCanvas.width,recCanvas.height);
+  }
+
+  // ── Update UI ─────────────────────────────────────────
+  const now=Date.now();
+  fpsArr.push(1000/(now-lastFPSTime)); lastFPSTime=now;
+  if(fpsArr.length>20) fpsArr.shift();
+  const fps=Math.round(fpsArr.reduce((a,b)=>a+b)/fpsArr.length);
+
+  if(shot){
+    showShotFlash(shot);
+    addTimeline(((Date.now()-startTime)/1000).toFixed(1),shot);
+  }
+
+  updateTopUI(fps);
+  if(frameIdx%8===0) updateDetailUI();
+
+  animId=requestAnimationFrame(loop);
+}
+
+function showShotFlash(type){
+  const el=document.getElementById('shotFlash');
+  el.textContent=SHOT_LBL[type]||type;
+  el.style.color=SHOT_CSS[type]||'#fff';
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+
+function updateTopUI(fps){
+  const tot=Object.values(shots.counts).reduce((a,b)=>a+b,0);
+  document.getElementById('sTot').textContent=tot;
+  document.getElementById('sShuttle').textContent=shuttle.lastPos?'●':'○';
+  document.getElementById('sShuttle').style.color=shuttle.lastPos?'var(--c)':'rgba(255,255,255,.3)';
+  const elapsed=(Date.now()-startTime)/1000;
+  document.getElementById('sRhythm').textContent=elapsed>5?(tot/(elapsed/60)).toFixed(1):'—';
+  document.getElementById('sFPS').textContent=fps;
+
+  const scoreStr=`${rally.score.top} — ${rally.score.bot}`;
+  document.getElementById('scoreBox').textContent=scoreStr;
+
+  const on=rally.state==='play';
+  document.getElementById('liveBadge').textContent=on?'ÉCHANGE':'LIVE';
+  document.getElementById('liveBadge').className=on?'on':'';
+  document.getElementById('rallyBadge').className=on?'show':'';
+}
+
+function updateDetailUI(){
+  const tot=Object.values(shots.counts).reduce((a,b)=>a+b,0);
+  const elapsed=(Date.now()-startTime)/1000;
+  document.getElementById('dTot').textContent=tot;
+  document.getElementById('dRhythm').textContent=elapsed>5?(tot/(elapsed/60)).toFixed(1):'—';
+  document.getElementById('dRallies').textContent=rally.all.length;
+
+  // Players
+  const p1=players.list[0], p2=players.list[1];
+  document.getElementById('dp1').textContent=p1?p1.zone||'—':'Non détecté';
+  document.getElementById('dp2').textContent=p2?p2.zone||'—':'Non détecté';
+  document.getElementById('dShuttle').textContent=shuttle.lastPos?`● ${shuttle.speed.toFixed(1)} px/f`:'○ Non visible';
+  document.getElementById('dShuttle').style.color=shuttle.lastPos?'var(--c)':'var(--muted)';
+  document.getElementById('dServes').textContent=`${serve.count.top} / ${serve.count.bot}`;
+  const calibEl=document.getElementById('dCalib');
+  calibEl.textContent=calib.done?'✓ OUI':'NON';
+  calibEl.style.color=calib.done?'var(--g)':'var(--muted)';
+
+  // Bar chart
+  updateBarChart(tot);
+
+  // Heatmaps
+  drawCourt('cJ1',zoneCounts[1]||{});
+  drawCourt('cJ2',zoneCounts[2]||{});
+}
+
+function updateBarChart(total){
+  const el=document.getElementById('barChart');
+  const t=Math.max(1,total);
+  el.innerHTML=[['smash',SHOT_CSS.smash],['dégagé',SHOT_CSS.dégagé],['amorti',SHOT_CSS.amorti],['drive',SHOT_CSS.drive]].map(([type,col])=>{
+    const n=shots.counts[type]||0, p=Math.round(n/t*100);
+    return `<div class="bar-row"><div class="bar-lbl">${SHOT_LBL[type]}</div><div class="bar-track"><div class="bar-fill" style="width:${p}%;background:${col}"></div></div><div class="bar-val" style="color:${col}">${n}</div></div>`;
+  }).join('');
+}
+
+function addTimeline(time,type){
+  const el=document.getElementById('timeline');
+  const col=SHOT_CSS[type]||'rgba(255,255,255,.4)';
+  const item=document.createElement('div');
+  item.className='tl-item new';
+  item.innerHTML=`<span class="tl-t">${time}s</span><span class="tl-badge" style="color:${col}">${SHOT_LBL[type]||type}</span>`;
+  el.insertBefore(item,el.firstChild);
+  while(el.children.length>40) el.removeChild(el.lastChild);
+}
+
+// ══════════════════════════════════════════════════════════
+//  COURT HEATMAP
+// ══════════════════════════════════════════════════════════
+function makeSVGEl(tag,a){
+  const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  for(const[k,v] of Object.entries(a)) e.setAttribute(k,v);
+  return e;
+}
+
+function drawCourt(svgId,counts){
+  const svg=document.getElementById(svgId); if(!svg) return;
+  const max=Math.max(1,...Object.values(counts));
+  svg.innerHTML='';
+  const cw=110/3, ch=148/3;
+  svg.appendChild(makeSVGEl('rect',{x:0,y:0,width:110,height:148,fill:'rgba(255,255,255,.04)',rx:4}));
+  ZONES_GRID.forEach((row,ri)=>row.forEach((z,ci)=>{
+    const v=(counts[z]||0)/max;
+    svg.appendChild(makeSVGEl('rect',{x:ci*cw,y:ri*ch,width:cw,height:ch,fill:`rgba(0,230,118,${.04+v*.8})`}));
+    if(counts[z]>0){
+      const t=makeSVGEl('text',{x:ci*cw+cw/2,y:ri*ch+ch/2+4,'text-anchor':'middle',
+        fill:v>.5?'rgba(0,0,0,.8)':'rgba(255,255,255,.45)','font-size':'8','font-family':'JetBrains Mono'});
+      t.textContent=counts[z]; svg.appendChild(t);
+    }
+  }));
+  [1,2].forEach(i=>{
+    svg.appendChild(makeSVGEl('line',{x1:i*cw,y1:0,x2:i*cw,y2:148,stroke:'rgba(255,255,255,.08)','stroke-width':.5}));
+    svg.appendChild(makeSVGEl('line',{x1:0,y1:i*ch,x2:110,y2:i*ch,stroke:'rgba(255,255,255,.08)','stroke-width':.5}));
+  });
+  svg.appendChild(makeSVGEl('line',{x1:0,y1:74,x2:110,y2:74,stroke:'#ffc400','stroke-width':1.5,'stroke-dasharray':'4,3'}));
+  svg.appendChild(makeSVGEl('rect',{x:0,y:0,width:110,height:148,fill:'none',stroke:'rgba(255,255,255,.12)','stroke-width':.5,rx:4}));
+}
+
+// ══════════════════════════════════════════════════════════
+//  CONTROLS
+// ══════════════════════════════════════════════════════════
+function toggleAnalysis(){
+  isAnalyzing=!isAnalyzing;
+  const btn=document.getElementById('recBtn');
+  if(isAnalyzing){
+    startTime=Date.now(); frameIdx=0;
+    btn.innerHTML='<div class="ctrl-icon">⏸</div>PAUSE';
+    btn.style.background='rgba(255,68,68,.15)';
+    btn.style.borderColor='#ff4444';
+    btn.style.color='#ff4444';
+    document.getElementById('liveBadge').className='on';
+    document.getElementById('liveBadge').textContent='LIVE';
+    if(!animId) animId=requestAnimationFrame(loop);
+  } else {
+    btn.innerHTML='<div class="ctrl-icon">▶</div>ANALYSER';
+    btn.style.background='rgba(0,230,118,.15)';
+    btn.style.borderColor='var(--g)';
+    btn.style.color='var(--g)';
+    document.getElementById('liveBadge').className='';
+    document.getElementById('liveBadge').textContent='PAUSE';
+    // Arrête l'enregistrement si en cours
+    if(isRecording) stopRecord();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  MEDIARECORDER — EXPORT VIDÉO ANNOTÉE
+// ══════════════════════════════════════════════════════════
+
+function getBestMimeType(){
+  // Priorité : mp4 H.264 (iOS 15.1+) → webm vp9 → webm vp8 → webm
+  const types=[
+    'video/mp4;codecs=avc1',
+    'video/mp4',
+    'video/webm;codecs=vp9',
+    'video/webm;codecs=vp8',
+    'video/webm',
+  ];
+  return types.find(t=>MediaRecorder.isTypeSupported(t)) || '';
+}
+
+function initRecCanvas(){
+  const vid=document.getElementById('camVideo');
+  const cvs=document.getElementById('overlay');
+  recCanvas=document.createElement('canvas');
+  recCanvas.width=cvs.width||640;
+  recCanvas.height=cvs.height||480;
+  recCtx=recCanvas.getContext('2d');
+  // Premier frame pour que le stream démarre correctement
+  recCtx.drawImage(vid,0,0,recCanvas.width,recCanvas.height);
+  recCtx.drawImage(cvs,0,0,recCanvas.width,recCanvas.height);
+}
+
+function toggleRecord(){
+  if(!isAnalyzing){
+    showToast('Lance d\'abord l\'analyse ▶');
+    return;
+  }
+  if(isRecording) stopRecord();
+  else startRecord();
+}
+
+function startRecord(){
+  if(!window.MediaRecorder){
+    showToast('MediaRecorder non supporté sur cet appareil');
+    return;
+  }
+
+  initRecCanvas();
+
+  const fps=30;
+  recStream=recCanvas.captureStream(fps);
+  recChunks=[];
+
+  const mimeType=getBestMimeType();
+  const opts=mimeType?{mimeType,videoBitsPerSecond:4_000_000}:{videoBitsPerSecond:4_000_000};
+
+  try{
+    mediaRec=new MediaRecorder(recStream,opts);
+  }catch(e){
+    // Fallback sans options si le codec demandé échoue
+    try{ mediaRec=new MediaRecorder(recStream); }
+    catch(e2){ showToast('Enregistrement non disponible sur ce navigateur'); return; }
+  }
+
+  mediaRec.ondataavailable=e=>{ if(e.data&&e.data.size>0) recChunks.push(e.data); };
+  mediaRec.onstop=finishRecord;
+  mediaRec.start(500); // chunk toutes les 500ms
+
+  isRecording=true;
+  recStartTime=Date.now();
+
+  // UI
+  const btn=document.getElementById('vidBtn');
+  btn.className='ctrl-btn rec-on';
+  btn.innerHTML='<div class="ctrl-icon">⏹</div>STOP';
+  document.getElementById('recIndicator').className='show';
+
+  // Timer
+  recTimerInterval=setInterval(()=>{
+    const s=Math.floor((Date.now()-recStartTime)/1000);
+    const mm=String(Math.floor(s/60)).padStart(2,'0');
+    const ss=String(s%60).padStart(2,'0');
+    document.getElementById('recDuration').textContent=`${mm}:${ss}`;
+  },500);
+}
+
+function stopRecord(){
+  if(!mediaRec||mediaRec.state==='inactive') return;
+  mediaRec.stop();
+  if(recStream) recStream.getTracks().forEach(t=>t.stop());
+  clearInterval(recTimerInterval);
+
+  isRecording=false;
+  const btn=document.getElementById('vidBtn');
+  btn.className='ctrl-btn';
+  btn.innerHTML='<div class="ctrl-icon">⏺</div>REC';
+  document.getElementById('recIndicator').className='';
+  document.getElementById('recDuration').textContent='00:00';
+}
+
+function finishRecord(){
+  if(!recChunks.length){ showToast('Aucune donnée enregistrée'); return; }
+
+  const mimeType=mediaRec.mimeType||'video/webm';
+  const blob=new Blob(recChunks,{type:mimeType});
+  const url=URL.createObjectURL(blob);
+
+  const durSec=Math.round((Date.now()-recStartTime)/1000);
+  const mm=String(Math.floor(durSec/60)).padStart(2,'0');
+  const ss=String(durSec%60).padStart(2,'0');
+  const sizeMb=(blob.size/1_000_000).toFixed(1);
+  const ext=mimeType.includes('mp4')?'mp4':'webm';
+  const filename=`BadCoachLive_${new Date().toISOString().slice(0,19).replace(/[T:]/g,'-')}.${ext}`;
+
+  // Prévisualisation
+  const previewVid=document.getElementById('previewVid');
+  previewVid.src=url;
+  previewVid.load();
+
+  document.getElementById('modalMeta').textContent=`${mm}:${ss} · ${sizeMb} Mo · ${ext.toUpperCase()}`;
+
+  // Bouton téléchargement
+  const dlBtn=document.getElementById('dlBtn');
+  dlBtn.onclick=()=>{
+    const a=document.createElement('a');
+    a.href=url; a.download=filename; a.click();
+    showToast('Téléchargement lancé ✓');
+  };
+
+  document.getElementById('saveModal').className='show';
+  recChunks=[];
+}
+
+function closeSaveModal(){
+  const modal=document.getElementById('saveModal');
+  modal.className='';
+  const pv=document.getElementById('previewVid');
+  pv.pause(); pv.src='';
+}
+
+// ── Toast helper ─────────────────────────────────────────
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){
+    t=document.createElement('div');
+    t.id='toast';
+    t.style.cssText='position:absolute;bottom:140px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#fff;padding:10px 18px;border-radius:20px;font-family:JetBrains Mono,monospace;font-size:11px;letter-spacing:1px;z-index:60;white-space:nowrap;pointer-events:none;transition:opacity .3s';
+    document.getElementById('stage').appendChild(t);
+  }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.style.opacity='0',2400);
+}
+
+// ══════════════════════════════════════════════════════════
+//  SUMMARY SCREEN
+// ══════════════════════════════════════════════════════════
+
+const SHOT_COLORS_ARR = [
+  {key:'smash',  lbl:'Smash',  col:'#ff4444'},
+  {key:'dégagé', lbl:'Dégagé', col:'#00e676'},
+  {key:'amorti', lbl:'Amorti', col:'#3d8eff'},
+  {key:'drive',  lbl:'Drive',  col:'#ffc400'},
+  {key:'inconnu',lbl:'Autre',  col:'rgba(255,255,255,.3)'},
+];
+
+function showSummary(){
+  // Pause l'analyse si en cours
+  if(isAnalyzing) toggleAnalysis();
+
+  const elapsed=(Date.now()-startTime)/1000;
+  const total=Object.values(shots.counts).reduce((a,b)=>a+b,0);
+
+  // ── Header date ──────────────────────────────────────────
+  document.getElementById('sumDate').textContent=
+    new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+
+  // ── Score ────────────────────────────────────────────────
+  document.getElementById('sumScoreNum').textContent=
+    `${rally.score.top} — ${rally.score.bot}`;
+  const mm=String(Math.floor(elapsed/60)).padStart(2,'0');
+  const ss=String(Math.floor(elapsed%60)).padStart(2,'0');
+  document.getElementById('sumDuration').textContent=`Durée : ${mm}:${ss}`;
+
+  // ── KPIs ─────────────────────────────────────────────────
+  document.getElementById('skTot').textContent=total;
+  document.getElementById('skRpm').textContent=
+    elapsed>5?(total/(elapsed/60)).toFixed(1):'—';
+  document.getElementById('skRallies').textContent=rally.all.length;
+  const avgDur=rally.all.length
+    ? (rally.all.reduce((a,r)=>a+(parseFloat(r.dur)||0),0)/rally.all.length).toFixed(1)+'s'
+    : '—';
+  document.getElementById('skAvgRally').textContent=avgDur;
+  document.getElementById('skServeTop').textContent=serve.count.top;
+  document.getElementById('skServeBot').textContent=serve.count.bot;
+  document.getElementById('skCalibRow').style.display=calib.done?'block':'none';
+
+  // ── Donut chart ──────────────────────────────────────────
+  drawDonut(total);
+
+  // ── Rally timeline ───────────────────────────────────────
+  drawRallyTimeline();
+
+  // ── Heatmaps ─────────────────────────────────────────────
+  drawCourt('sumCJ1', zoneCounts[1]||{});
+  drawCourt('sumCJ2', zoneCounts[2]||{});
+
+  // ── Auto-insight ─────────────────────────────────────────
+  document.getElementById('sumInsight').innerHTML=generateInsight(total,elapsed);
+
+  // ── Affiche l'écran ──────────────────────────────────────
+  document.getElementById('summaryScreen').className='show';
+  document.getElementById('sumActions').className='show';
+
+  // Sauvegarde la session
+  const sessionSummary={
+    score:rally.score, total_shots:total,
+    shot_counts:shots.counts, n_rallies:rally.all.length,
+    zone_counts:{j1:zoneCounts[1]||{},j2:zoneCounts[2]||{}},
+  };
+  saveSessionToHistory(sessionSummary);
+}
+
+function drawDonut(total){
+  const cvs=document.getElementById('donutCanvas');
+  const ctx=cvs.getContext('2d');
+  const W=110, cx=W/2, cy=W/2, R=46, r=26;
+  ctx.clearRect(0,0,W,W);
+
+  const data=SHOT_COLORS_ARR.map(s=>({...s,n:shots.counts[s.key]||0}))
+    .filter(s=>s.n>0);
+
+  if(!total||!data.length){
+    ctx.strokeStyle='rgba(255,255,255,.1)';
+    ctx.lineWidth=20; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+    document.getElementById('donutLegend').innerHTML=
+      '<div style="font-family:JetBrains Mono,monospace;font-size:10px;color:rgba(255,255,255,.3)">Aucune frappe</div>';
+    return;
+  }
+
+  let startA=-Math.PI/2;
+  data.forEach(s=>{
+    const slice=(s.n/total)*Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R,startA,startA+slice);
+    ctx.closePath();
+    ctx.fillStyle=s.col;
+    ctx.fill();
+    startA+=slice;
+  });
+
+  // Hole
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.fillStyle='#060810';
+  ctx.fill();
+
+  // Centre text
+  ctx.fillStyle='#fff';
+  ctx.font='bold 18px Barlow Condensed,sans-serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(total,cx,cy-4);
+  ctx.font='9px JetBrains Mono,monospace';
+  ctx.fillStyle='rgba(255,255,255,.45)';
+  ctx.fillText('COUPS',cx,cy+10);
+
+  // Légende
+  document.getElementById('donutLegend').innerHTML=data.map(s=>{
+    const pct=Math.round(s.n/total*100);
+    return `<div class="dl-row">
+      <div class="dl-dot" style="background:${s.col}"></div>
+      <span>${s.lbl}</span>
+      <span class="dl-pct">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function drawRallyTimeline(){
+  const cvs=document.getElementById('rallyCanvas');
+  const empty=document.getElementById('rallyEmpty');
+  const all=rally.all;
+
+  if(!all.length){
+    cvs.style.display='none'; empty.style.display='block'; return;
+  }
+  empty.style.display='none'; cvs.style.display='block';
+
+  const BAR_H=20, GAP=5, PAD=8;
+  const W=cvs.parentElement.clientWidth-28;
+  const H=all.length*(BAR_H+GAP)+PAD*2;
+  cvs.width=W; cvs.height=H;
+  cvs.style.height=H+'px';
+
+  const ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const maxDur=Math.max(...all.map(r=>parseFloat(r.dur)||1),1);
+
+  all.forEach((r,i)=>{
+    const y=PAD+i*(BAR_H+GAP);
+    const pct=(parseFloat(r.dur)||0)/maxDur;
+    const bw=Math.max(4,(W-60)*pct);
+    const col=r.winner==='top'?'#00e676':'#3d8eff';
+
+    // Track
+    ctx.fillStyle='rgba(255,255,255,.06)';
+    ctx.beginPath();
+    ctx.roundRect(0,y,W-60,BAR_H,4);
+    ctx.fill();
+
+    // Bar
+    ctx.fillStyle=col;
+    ctx.globalAlpha=.85;
+    ctx.beginPath();
+    ctx.roundRect(0,y,bw,BAR_H,4);
+    ctx.fill();
+    ctx.globalAlpha=1;
+
+    // Label
+    ctx.fillStyle='rgba(255,255,255,.6)';
+    ctx.font=`700 10px 'Barlow Condensed',sans-serif`;
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.fillText(`#${r.idx}`,W-54,y+BAR_H/2);
+
+    ctx.fillStyle=col;
+    ctx.fillText(`${r.dur}s`,W-34,y+BAR_H/2);
+
+    ctx.fillStyle='rgba(255,255,255,.3)';
+    ctx.fillText(`${r.shots||0}`,W-12,y+BAR_H/2);
+  });
+
+  // Légende
+  ctx.font='8px JetBrains Mono,monospace';
+  ctx.fillStyle='rgba(255,255,255,.25)';
+  ctx.textAlign='right';
+  ctx.fillText('#  dur  coups',W,PAD-2);
+}
+
+function generateInsight(total, elapsed){
+  const rpm=elapsed>5?total/(elapsed/60):0;
+  const dom=Object.entries(shots.counts).filter(([k])=>k!=='service').sort((a,b)=>b[1]-a[1])[0];
+  const domLbl={smash:'Smash',dégagé:'Dégagé',amorti:'Amorti',drive:'Drive',inconnu:'?'}[dom?.[0]]||'—';
+  const avgRally=rally.all.length?(rally.all.reduce((a,r)=>a+(parseFloat(r.dur)||0),0)/rally.all.length).toFixed(1):'?';
+  const winner=rally.score.top>rally.score.bot?'J1 (haut)':rally.score.bot>rally.score.top?'J2 (bas)':'match nul';
+  const totServes=serve.count.top+serve.count.bot;
+
+  const lines=[];
+  if(total>0&&dom) lines.push(`La frappe dominante est le <strong>${domLbl}</strong> (${Math.round((dom[1]/total)*100)}% des coups).`);
+  if(rpm>0) lines.push(`Rythme de <strong>${rpm.toFixed(1)} frappes/min</strong> — intensité ${rpm>40?'élevée':rpm>20?'modérée':'faible'}.`);
+  if(totServes>0) lines.push(`Services détectés : <strong>${serve.count.top}</strong> côté J1 · <strong>${serve.count.bot}</strong> côté J2.`);
+  if(rally.all.length) lines.push(`Durée moy. des échanges : <strong>${avgRally}s</strong> — jeu ${parseFloat(avgRally)>6?'long et patient':'court et direct'}.`);
+  if(rally.score.top+rally.score.bot>0) lines.push(`Score final : <strong>${winner}</strong>.`);
+  if(calib.done) lines.push(`Session avec terrain <strong>calibré</strong> — zones en coordonnées réelles.`);
+  if(!lines.length) return 'Lance une session pour voir l\'analyse automatique.';
+  return lines.join(' ');
+}
+
+// ── PNG export / partage ──────────────────────────────────
+async function shareSummary(){
+  const btn=document.getElementById('sumShareBtn');
+  btn.textContent='⏳ GÉNÉRATION…'; btn.disabled=true;
+
+  try{
+    const shareCanvas=await buildShareCanvas();
+    shareCanvas.toBlob(async blob=>{
+      const file=new File([blob],'BadCoachLive_Resume.png',{type:'image/png'});
+      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+        try{
+          await navigator.share({files:[file],title:'BadCoach Live — Résumé de session'});
+        }catch(e){ if(e.name!=='AbortError') downloadBlob(blob); }
+      } else {
+        downloadBlob(blob);
+        showToast('Image téléchargée ✓');
+      }
+      btn.textContent='📤 PARTAGER EN IMAGE'; btn.disabled=false;
+    },'image/png');
+  }catch(e){
+    showToast('Erreur export : '+e.message);
+    btn.textContent='📤 PARTAGER EN IMAGE'; btn.disabled=false;
+  }
+}
+
+async function buildShareCanvas(){
+  const W=390, PAD=20;
+  const total=Object.values(shots.counts).reduce((a,b)=>a+b,0);
+  const elapsed=(Date.now()-startTime)/1000;
+  const rpm=elapsed>5?(total/(elapsed/60)).toFixed(1):'—';
+  let H=520;
+
+  const cvs=document.createElement('canvas');
+  cvs.width=W;
+  const ctx=cvs.getContext('2d');
+
+  // Pass 1 : measure
+  cvs.height=H;
+  ctx.fillStyle='#060810';
+  ctx.fillRect(0,0,W,H);
+
+  // Header
+  // Logo BadCoach Live sur le PNG export
+  const _logoImg=new Image();
+  _logoImg.src='data:image/png;base64,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';
+  if(_logoImg.complete){
+    ctx2.drawImage(_logoImg,PAD,PAD-2,36,36);
+  }
+  ctx.fillStyle='#fff';
+  ctx.font='bold 22px Barlow Condensed,sans-serif';
+  ctx.textAlign='left'; ctx.textBaseline='top';
+  ctx.fillText('BAD',PAD+42,PAD+2);
+  ctx.fillStyle='#00e676';
+  ctx.fillText('COACH',PAD+42+ctx.measureText('BAD').width,PAD+2);
+  ctx.fillStyle='rgba(255,255,255,.4)';
+  ctx.font='11px JetBrains Mono,monospace';
+  ctx.fillText('LIVE',PAD+42,PAD+26);
+
+  ctx.fillStyle='rgba(255,255,255,.3)';
+  ctx.font='11px JetBrains Mono,monospace';
+  ctx.textAlign='right';
+  ctx.fillText(new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}),W-PAD,PAD+6);
+
+  // Score
+  const scoreStr=`${rally.score.top}  —  ${rally.score.bot}`;
+  ctx.fillStyle='#00e676';
+  ctx.font='bold 72px Barlow Condensed,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(scoreStr,W/2,60);
+
+  ctx.fillStyle='rgba(255,255,255,.3)';
+  ctx.font='11px JetBrains Mono,monospace';
+  const mm=String(Math.floor(elapsed/60)).padStart(2,'0');
+  const ss=String(Math.floor(elapsed%60)).padStart(2,'0');
+  ctx.fillText(`DURÉE : ${mm}:${ss}`,W/2,142);
+
+  // Divider
+  ctx.strokeStyle='rgba(255,255,255,.12)';
+  ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(PAD,160); ctx.lineTo(W-PAD,160); ctx.stroke();
+
+  // KPI row
+  const kpis=[
+    {v:total,l:'FRAPPES',c:'#00e676'},
+    {v:rpm,l:'/ MIN',c:'#ffc400'},
+    {v:rally.all.length,l:'ÉCHANGES',c:'#00e5ff'},
+  ];
+  kpis.forEach((k,i)=>{
+    const x=PAD+(W-PAD*2)/3*i+PAD/2;
+    ctx.fillStyle=k.c;
+    ctx.font='bold 36px Barlow Condensed,sans-serif';
+    ctx.textAlign='center';
+    ctx.fillText(k.v,x+(W-PAD*2)/6,175);
+    ctx.fillStyle='rgba(255,255,255,.35)';
+    ctx.font='9px JetBrains Mono,monospace';
+    ctx.fillText(k.l,x+(W-PAD*2)/6,213);
+  });
+
+  // Mini donut (reuse data)
+  const donutSrc=document.getElementById('donutCanvas');
+  ctx.drawImage(donutSrc,PAD,232,100,100);
+
+  // Shot bars on canvas
+  let by=240;
+  const dataShots=SHOT_COLORS_ARR.map(s=>({...s,n:shots.counts[s.key]||0})).filter(s=>s.n>0);
+  const maxN=Math.max(...dataShots.map(s=>s.n),1);
+  const barAreaW=W-PAD*2-120;
+  dataShots.forEach(s=>{
+    const bw=(s.n/maxN)*barAreaW;
+    ctx.fillStyle='rgba(255,255,255,.06)';
+    ctx.beginPath(); ctx.roundRect(130,by,barAreaW,14,3); ctx.fill();
+    ctx.fillStyle=s.col; ctx.globalAlpha=.85;
+    ctx.beginPath(); ctx.roundRect(130,by,Math.max(4,bw),14,3); ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.fillStyle='rgba(255,255,255,.5)';
+    ctx.font='11px Barlow Condensed,sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText(`${s.lbl}  ${s.n}`,130+barAreaW+8,by+11);
+    by+=20;
+  });
+
+  // Insight
+  ctx.fillStyle='rgba(0,230,118,.15)';
+  ctx.beginPath(); ctx.roundRect(PAD,by+8,W-PAD*2,56,8); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.8)';
+  ctx.font='12px Barlow,sans-serif';
+  ctx.textAlign='left';
+  const insight=generateInsight(total,elapsed).replace(/<[^>]+>/g,'');
+  wrapText(ctx,insight,PAD+10,by+22,W-PAD*2-20,16);
+
+  // Watermark
+  ctx.fillStyle='rgba(255,255,255,.15)';
+  ctx.font='10px JetBrains Mono,monospace';
+  ctx.textAlign='center';
+  ctx.fillText('badcoachlive.app',W/2,by+80);
+
+  cvs.height=by+96;
+  // Redraw bg on correct height
+  const cvs2=document.createElement('canvas');
+  cvs2.width=W; cvs2.height=by+96;
+  const ctx2=cvs2.getContext('2d');
+  ctx2.fillStyle='#060810'; ctx2.fillRect(0,0,W,cvs2.height);
+  ctx2.drawImage(cvs,0,0);
+  return cvs2;
+}
+
+function wrapText(ctx,text,x,y,maxW,lineH){
+  const words=text.split(' ');
+  let line='';
+  words.forEach(w=>{
+    const test=line+w+' ';
+    if(ctx.measureText(test).width>maxW&&line){
+      ctx.fillText(line,x,y); line=w+' '; y+=lineH;
+    } else line=test;
+  });
+  ctx.fillText(line,x,y);
+}
+
+function downloadBlob(blob){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`BadCoachLive_${Date.now()}.png`;
+  a.click();
+}
+
+function newSession(){
+  document.getElementById('summaryScreen').className='';
+  document.getElementById('sumActions').className='';
+  resetStats();
+}
+
+function resetStats(){
+  shots.history=[]; shots.counts={smash:0,dégagé:0,amorti:0,drive:0,inconnu:0}; shots.lastFrame=-30;
+  shuttle.trail=[]; shuttle.lastPos=null; shuttle.speeds=[];
+  rally.score={top:0,bot:0}; rally.all=[]; rally.events=[];
+  rally.state='idle'; rally.current=null; rally.sh=0; rally.noSh=0;
+  rally.bounceBuf=[];
+  serve.count={top:0,bot:0}; serve.history=[]; serve.checking=false; serve.checkBuf=[];
+  players.list=[]; players.lastDet=[];
+  Object.keys(zoneCounts).forEach(k=>zoneCounts[k]={});
+  kalman.reset();
+  fatigue.buckets=[]; fatigue.warnShown=false;
+  tactics.patterns={}; tactics.lastInsight=null;
+  autoNetFrameCount=0; adaptFrameCount=0;
+  lastAutoScoreFrame=-60;
+  document.getElementById('scoreBox').textContent='0 — 0';
+  document.getElementById('timeline').innerHTML='';
+  startTime=Date.now(); frameIdx=0;
+}
+
+let panelOpen=false;
+function togglePanel(){
+  panelOpen=!panelOpen;
+  document.getElementById('detailPanel').className=panelOpen?'open':'';
+}
+
+// Close panel on backdrop tap
+document.addEventListener('touchstart',e=>{
+  if(panelOpen&&!document.getElementById('detailPanel').contains(e.target))
+    togglePanel();
+},{passive:true});
+
+// Resize on orientation change
+window.addEventListener('resize',resizeOverlay);
+window.addEventListener('orientationchange',()=>setTimeout(resizeOverlay,300));
+
+// ══════════════════════════════════════════════════════════
+//  PERSISTANCE — localStorage
+// ══════════════════════════════════════════════════════════
+const PREFS_KEY   = 'sl_prefs_v1';
+const HISTORY_KEY = 'sl_history_v1';
+
+const PREFS_DEFAULT = {
+  kalman:       true,
+  autoNet:      true,
+  haptic:       true,
+  adaptBright:  true,
+  sound:        false,
+  shuttleBright:200,
+  apiKey:       '',
+};
+
+let prefs = {...PREFS_DEFAULT};
+
+function loadPrefs(){
+  try{
+    const raw=localStorage.getItem(PREFS_KEY);
+    if(raw) prefs={...PREFS_DEFAULT,...JSON.parse(raw)};
+  }catch(e){}
+  applyPrefs();
+}
+
+function savePrefs(){
+  try{ localStorage.setItem(PREFS_KEY,JSON.stringify(prefs)); }catch(e){}
+}
+
+function applyPrefs(){
+  CFG.SHUTTLE_BRIGHT=prefs.shuttleBright||200;
+  // Sync UI toggles
+  ['kalman','autoNet','haptic','adaptBright','sound'].forEach(k=>{
+    const el=document.getElementById('tog'+k[0].toUpperCase()+k.slice(1));
+    if(el) el.className='sp-toggle'+(prefs[k]?' on':'');
+  });
+  const bi=document.getElementById('brightSlider');
+  const bv=document.getElementById('brightVal');
+  if(bi){ bi.value=prefs.shuttleBright; }
+  if(bv){ bv.textContent=prefs.shuttleBright; }
+  const ak=document.getElementById('apiKeyInput');
+  if(ak&&prefs.apiKey) ak.value=prefs.apiKey;
+}
+
+function spToggle(key,el){
+  prefs[key]=!prefs[key];
+  el.className='sp-toggle'+(prefs[key]?' on':'');
+  savePrefs();
+  if(key==='sound') initAudio();
+}
+
+// ── Historique sessions ──────────────────────────────────
+function getHistory(){
+  try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); }catch(e){ return []; }
+}
+
+function saveSessionToHistory(summary){
+  try{
+    const hist=getHistory();
+    hist.unshift({...summary, savedAt:new Date().toISOString()});
+    if(hist.length>20) hist.pop();
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(hist));
+  }catch(e){}
+}
+
+function renderHistory(){
+  const list=document.getElementById('historyList');
+  if(!list) return;
+  const hist=getHistory();
+  if(!hist.length){ list.innerHTML='<div style="font-size:12px;color:var(--muted);padding:8px 0">Aucune session enregistrée</div>'; return; }
+  list.innerHTML=hist.slice(0,8).map((s,i)=>{
+    const d=new Date(s.savedAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    return `<div class="sp-history-item">
+      <div>
+        <div class="sp-history-score">${s.score?.top||0} — ${s.score?.bot||0}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:var(--fm)">${d} · ${s.total_shots||0} frappes</div>
+      </div>
+      <div style="font-size:10px;color:var(--muted)">${s.n_rallies||0} éch.</div>
+    </div>`;
+  }).join('');
+}
+
+function clearHistory(){
+  if(confirm('Effacer tout l\'historique ?')){
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+    showToast('Historique effacé');
+  }
+}
+
+function exportAllHistory(){
+  const hist=getHistory();
+  const blob=new Blob([JSON.stringify(hist,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='BadCoachLive_historique.json';
+  a.click();
+}
+
+// ── Sauvegarde calibration ───────────────────────────────
+function saveCalibToPrefs(){
+  if(calib.done&&calib.points.length===4){
+    prefs.calibPoints=calib.points;
+    prefs.calibDone=true;
+    savePrefs();
+  }
+}
+
+function loadCalibFromPrefs(){
+  if(prefs.calibPoints&&prefs.calibDone&&prefs.calibPoints.length===4){
+    calib.points=prefs.calibPoints;
+    calib.H=computeH(calib.points,TERRAIN_NORM);
+    calib.done=true;
+    rally.netY=(calib.points[2][1]+calib.points[3][1])/2;
+    document.getElementById('calibBadge').className='show';
+    document.getElementById('calibBtn').style.color='var(--g)';
+    document.getElementById('calibBtn').style.borderColor='var(--g)';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  FILTRE DE KALMAN 2D
+// ══════════════════════════════════════════════════════════
+const kalman = {
+  x:0, y:0, vx:0, vy:0,
+  P:[[100,0,0,0],[0,100,0,0],[0,0,100,0],[0,0,0,100]],
+  initialized:false,
+  // Bruit process (Q) et mesure (R)
+  Q:1.5, R:10,
+
+  reset(){ this.initialized=false; },
+
+  predict(){
+    // F = [[1,0,1,0],[0,1,0,1],[0,0,1,0],[0,0,0,1]] (mouvement uniforme)
+    this.x+=this.vx; this.y+=this.vy;
+    // Propagation de la covariance
+    this.P[0][0]+=this.P[2][2]+2*this.P[0][2]+this.Q;
+    this.P[1][1]+=this.P[3][3]+2*this.P[1][3]+this.Q;
+    this.P[2][2]+=this.Q; this.P[3][3]+=this.Q;
+  },
+
+  update(mx, my){
+    if(!this.initialized){
+      this.x=mx; this.y=my; this.vx=0; this.vy=0; this.initialized=true; return [mx,my];
+    }
+    this.predict();
+    const Kx=this.P[0][0]/(this.P[0][0]+this.R);
+    const Ky=this.P[1][1]/(this.P[1][1]+this.R);
+    const Kvx=this.P[2][0]/(this.P[0][0]+this.R);
+    const Kvy=this.P[3][1]/(this.P[1][1]+this.R);
+    const innX=mx-this.x, innY=my-this.y;
+    this.x+=Kx*innX; this.y+=Ky*innY;
+    this.vx+=Kvx*innX; this.vy+=Kvy*innY;
+    this.P[0][0]*=(1-Kx); this.P[1][1]*=(1-Ky);
+    this.P[2][2]*=(1-Kvx); this.P[3][3]*=(1-Kvy);
+    return [Math.round(this.x), Math.round(this.y)];
+  },
+
+  getEstimate(){ return this.initialized?[Math.round(this.x),Math.round(this.y)]:null; }
+};
+
+// ══════════════════════════════════════════════════════════
+//  DÉTECTION AUTO DU FILET (Hough)
+// ══════════════════════════════════════════════════════════
+let autoNetFrameCount=0;
+
+function autoDetectNet(imageData, W, H){
+  if(!prefs.autoNet || calib.done) return;
+  autoNetFrameCount++;
+  if(autoNetFrameCount%90!==0) return; // Toutes les ~3s
+
+  const gray=new Uint8Array(W*H);
+  for(let i=0;i<W*H;i++){
+    const j=i*4;
+    gray[i]=Math.round(imageData.data[j]*.3+imageData.data[j+1]*.59+imageData.data[j+2]*.11);
+  }
+  // Cherche les lignes horizontales lumineuses dans la bande centrale (35-65%)
+  const y0=Math.floor(H*.35), y1=Math.floor(H*.65);
+  const hlines=[];
+  for(let y=y0;y<y1;y++){
+    let lineSum=0, count=0;
+    for(let x=Math.floor(W*.1);x<Math.floor(W*.9);x++){
+      lineSum+=gray[y*W+x]; count++;
+    }
+    const avg=lineSum/count;
+    if(avg>160) hlines.push({y,avg});
+  }
+  if(hlines.length===0) return;
+  hlines.sort((a,b)=>b.avg-a.avg);
+  const bestY=hlines[0].y;
+  // Mise à jour douce du netY
+  rally.netY = rally.netY ? rally.netY*.85+bestY*.15 : bestY;
+}
+
+// ══════════════════════════════════════════════════════════
+//  RETOUR HAPTIQUE & SON
+// ══════════════════════════════════════════════════════════
+let audioCtx=null;
+
+function initAudio(){
+  if(!prefs.sound) return;
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+}
+
+function vibrate(pattern){
+  if(!prefs.haptic) return;
+  if(navigator.vibrate) navigator.vibrate(pattern);
+  // Pulse visuel sur le bouton analyser
+  const btn=document.getElementById('recBtn');
+  btn.classList.add('haptic');
+  setTimeout(()=>btn.classList.remove('haptic'),200);
+}
+
+function playBeep(freq=880, dur=80, vol=0.15){
+  if(!prefs.sound||!audioCtx) return;
+  try{
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value=freq;
+    gain.gain.setValueAtTime(vol,audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur/1000);
+    osc.start(); osc.stop(audioCtx.currentTime+dur/1000);
+  }catch(e){}
+}
+
+// Sons par type de frappe
+const SHOT_BEEP={smash:[1200,60],dégagé:[660,80],amorti:[440,100],drive:[880,50],service:[550,120]};
+
+function onShotEvent(type){
+  const bp=SHOT_BEEP[type]||[700,70];
+  playBeep(bp[0],bp[1]);
+  const vp={smash:[80,40,80],dégagé:[40],amorti:[60],drive:[30],service:[50,50,50]};
+  vibrate(vp[type]||[40]);
+}
+
+function onPointEvent(){
+  playBeep(440,80); setTimeout(()=>playBeep(660,120),100);
+  vibrate([40,30,80]);
+}
+
+// ══════════════════════════════════════════════════════════
+//  LUMINOSITÉ ADAPTATIVE
+// ══════════════════════════════════════════════════════════
+let adaptFrameCount=0;
+
+function updateAdaptiveBrightness(imageData, W, H){
+  if(!prefs.adaptBright) return;
+  adaptFrameCount++;
+  if(adaptFrameCount%30!==0) return;
+  const sample=imageData.data;
+  let sum=0, n=0;
+  // Échantillon : 1 pixel sur 50
+  for(let i=0;i<W*H;i+=50){
+    const j=i*4;
+    sum+=sample[j]*.3+sample[j+1]*.59+sample[j+2]*.11;
+    n++;
+  }
+  const avg=sum/n;
+  // Plus c'est sombre → overlay plus transparent
+  const dimOpacity=avg<40 ? 0.35 : avg<80 ? 0.15 : 0;
+  document.getElementById('overlayDim').style.opacity=dimOpacity;
+}
+
+// ══════════════════════════════════════════════════════════
+//  DÉTECTION PATTERNS TACTIQUES
+// ══════════════════════════════════════════════════════════
+const tactics = { patterns:{}, lastInsight:null };
+
+function analyzeTactics(){
+  const hist=shots.history.slice(-30).map(s=>s.type);
+  if(hist.length<6) return null;
+  // Cherche les bi-grammes et tri-grammes fréquents
+  const ngrams={};
+  for(let n=2;n<=3;n++){
+    for(let i=0;i<=hist.length-n;i++){
+      const key=hist.slice(i,i+n).join('→');
+      ngrams[key]=(ngrams[key]||0)+1;
+    }
+  }
+  // Trouve le pattern le plus fréquent (≥3 occurrences)
+  const best=Object.entries(ngrams).filter(([,c])=>c>=3).sort((a,b)=>b[1]-a[1])[0];
+  if(!best) return null;
+  tactics.patterns[best[0]]=(tactics.patterns[best[0]]||0)+1;
+  return {pattern:best[0], count:best[1]};
+}
+
+// ══════════════════════════════════════════════════════════
+//  ANALYSE FATIGUE
+// ══════════════════════════════════════════════════════════
+const fatigue = {buckets:[], warnShown:false};
+
+function updateFatigue(){
+  if(players.list.length<1) return;
+  const bucket30=Math.floor((Date.now()-startTime)/30000);
+  if(!fatigue.buckets[bucket30]) fatigue.buckets[bucket30]={speeds:[]};
+  players.list.forEach((p,i)=>{
+    const trail=p.trail||[];
+    if(trail.length>=2){
+      const spd=Math.hypot(trail[trail.length-1][0]-trail[trail.length-2][0],
+                           trail[trail.length-1][1]-trail[trail.length-2][1]);
+      fatigue.buckets[bucket30].speeds.push(spd);
+    }
+  });
+  if(bucket30<2) return;
+  const avg=(b)=>b.speeds.reduce((a,c)=>a+c,0)/Math.max(b.speeds.length,1);
+  const recent=avg(fatigue.buckets[bucket30]);
+  const prev=avg(fatigue.buckets[bucket30-1]);
+  if(prev>5 && recent<prev*.7 && !fatigue.warnShown){
+    fatigue.warnShown=true;
+    showToast('⚡ Baisse d\'intensité détectée');
+    setTimeout(()=>fatigue.warnShown=false,30000);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  SCORE AUTOMATIQUE PAR IA (Claude)
+// ══════════════════════════════════════════════════════════
+let lastAutoScoreFrame=-60;
+
+async function tryAutoScore(shuttlePos, W, H){
+  if(!prefs.apiKey) return;
+  if(!shuttlePos) return;
+  // Appelé seulement quand le volant est en bas de l'image (sol probable)
+  const yRatio=shuttlePos[1]/H;
+  if(yRatio<.78) return;
+  if(frameIdx-lastAutoScoreFrame<90) return;
+  lastAutoScoreFrame=frameIdx;
+  if(rally.state!=='play') return;
+
+  const cvs=document.getElementById('overlay');
+  const vid=document.getElementById('camVideo');
+  const tmp=document.createElement('canvas'); tmp.width=320; tmp.height=180;
+  const tc=tmp.getContext('2d');
+  tc.drawImage(vid,0,0,320,180);
+  tc.drawImage(cvs,0,0,320,180);
+  const b64=tmp.toDataURL('image/jpeg',.6).split(',')[1];
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':prefs.apiKey,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-opus-4-5',max_tokens:60,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+          {type:'text',text:'Le volant de badminton vient de toucher le sol. Qui marque le point ? Réponds uniquement : "haut" si le joueur du bas a raté, "bas" si le joueur du haut a raté, ou "incertain". Un seul mot.'}
+        ]}]
+      })
+    });
+    const data=await res.json();
+    const verdict=(data.content?.[0]?.text||'').toLowerCase().trim();
+    if(verdict==='haut'||verdict==='bas'){
+      const winner=verdict==='haut'?'top':'bot';
+      rally.score[winner]++;
+      document.getElementById('scoreBox').textContent=`${rally.score.top} — ${rally.score.bot}`;
+      showToast(`🤖 IA : point → J${winner==='top'?'1':'2'}`);
+      onPointEvent();
+    }
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════════
+//  PLAN D'ENTRAÎNEMENT IA (Claude)
+// ══════════════════════════════════════════════════════════
+function openTraining(){
+  if(!prefs.apiKey){
+    showToast('Ajoute ta clé API dans ⚙️ Réglages');
+    return;
+  }
+  document.getElementById('trainingPanel').className='show';
+  document.getElementById('tpLoading').style.display='flex';
+  document.getElementById('tpBtns').style.display='none';
+  document.getElementById('tpBody').innerHTML='<div class="tp-loading" id="tpLoading"><div class="tp-spinner"></div><div class="tp-msg">ANALYSE DE TA SESSION…</div></div>';
+  generateTrainingPlan();
+}
+
+function closeTraining(){ document.getElementById('trainingPanel').className=''; }
+function regenerateTraining(){ openTraining(); }
+
+async function generateTrainingPlan(){
+  const elapsed=(Date.now()-startTime)/1000;
+  const total=Object.values(shots.counts).reduce((a,b)=>a+b,0);
+  const rpm=elapsed>5?(total/(elapsed/60)).toFixed(1):'?';
+  const avgRally=rally.all.length?(rally.all.reduce((a,r)=>a+(parseFloat(r.dur)||0),0)/rally.all.length).toFixed(1):'?';
+  const dom=Object.entries(shots.counts).filter(([k])=>k!=='service').sort((a,b)=>b[1]-a[1])[0];
+  const topPattern=Object.entries(tactics.patterns).sort((a,b)=>b[1]-a[1])[0];
+  const sessionData={
+    duree_s:Math.round(elapsed), score:rally.score,
+    frappes_total:total, frappes_min:rpm,
+    repartition:shots.counts,
+    frappe_dominante:dom?.[0]||'?',
+    echanges:rally.all.length, duree_moy_echange:avgRally,
+    services:{j1:serve.count.top,j2:serve.count.bot},
+    pattern_tactique:topPattern?.[0]||'aucun',
+  };
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':prefs.apiKey,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({
+        model:'claude-opus-4-5',max_tokens:900,
+        system:'Tu es un coach de badminton expert. Analyse les statistiques d\'une session et génère exactement 3 exercices d\'entraînement ciblés. Réponds en JSON uniquement, sans markdown. Format : {"intro":"<2 phrases d\'analyse>","exercises":[{"titre":"<nom>","objectif":"<1 phrase>","description":"<2-3 phrases>","duree":"<ex: 15 min>","repetitions":"<ex: 3 séries de 20>","difficulte":"débutant|intermédiaire|avancé"}]}',
+        messages:[{role:'user',content:`Stats de la session : ${JSON.stringify(sessionData)}`}]
+      })
+    });
+    const data=await res.json();
+    const raw=data.content?.[0]?.text||'{}';
+    let plan;
+    try{ plan=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e){ throw new Error('Réponse invalide de l\'API'); }
+    renderTrainingPlan(plan);
+  }catch(e){
+    document.getElementById('tpBody').innerHTML=`<div class="tp-error">❌ Erreur : ${e.message}<br><br>Vérifie ta clé API dans les réglages.</div>`;
+    document.getElementById('tpBtns').style.display='flex';
+  }
+}
+
+function renderTrainingPlan(plan){
+  const exs=plan.exercises||[];
+  const diffColor={débutant:'var(--g)',intermédiaire:'var(--y)',avancé:'var(--r)'};
+  const html=`
+    ${plan.intro?`<div class="tp-intro">${plan.intro}</div>`:''}
+    ${exs.map((ex,i)=>`
+      <div class="tp-exercise">
+        <div class="tp-ex-num">EXERCICE 0${i+1}</div>
+        <div class="tp-ex-title">${ex.titre||'Exercice'}</div>
+        <div class="tp-ex-body">${ex.objectif||''}<br><br>${ex.description||''}</div>
+        <div class="tp-ex-meta">
+          ${ex.duree?`<span class="tp-ex-badge">⏱ ${ex.duree}</span>`:''}
+          ${ex.repetitions?`<span class="tp-ex-badge">× ${ex.repetitions}</span>`:''}
+          ${ex.difficulte?`<span class="tp-ex-badge" style="color:${diffColor[ex.difficulte]||'var(--g)'}">↑ ${ex.difficulte}</span>`:''}
+        </div>
+      </div>
+    `).join('')}
+  `;
+  document.getElementById('tpBody').innerHTML=html;
+  document.getElementById('tpBtns').style.display='flex';
+}
+
+// ══════════════════════════════════════════════════════════
+//  MODE OVERLAY MINIMAL
+// ══════════════════════════════════════════════════════════
+let isMinimal=false;
+function toggleMinimal(){
+  isMinimal=!isMinimal;
+  document.body.classList.toggle('minimal',isMinimal);
+  const btn=document.getElementById('minBtn');
+  btn.className='ctrl-btn'+(isMinimal?' on':'');
+  btn.querySelector('.ctrl-icon').textContent=isMinimal?'◉':'◎';
+  // Double-tap sur l'overlay aussi
+}
+// Double-tap sur la vidéo
+let lastTap=0;
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  if(now-lastTap<300&&e.target.id==='overlay'){
+    toggleMinimal(); e.preventDefault();
+  }
+  lastTap=now;
+},{passive:false});
+
+// ══════════════════════════════════════════════════════════
+//  PANEL RÉGLAGES
+// ══════════════════════════════════════════════════════════
+function openSettings(){
+  applyPrefs();
+  renderHistory();
+  const ak=document.getElementById('apiKeyInput');
+  if(ak&&prefs.apiKey) ak.value=prefs.apiKey;
+  const s=document.getElementById('apiKeyStatus');
+  if(s) s.textContent=prefs.apiKey?'✓ Clé enregistrée':'Aucune clé';
+  document.getElementById('settingsPanel').className='show';
+}
+function closeSettings(){ document.getElementById('settingsPanel').className=''; }
+
+// Save API key on input
+document.addEventListener('DOMContentLoaded',()=>{
+  const ak=document.getElementById('apiKeyInput');
+  if(ak) ak.addEventListener('input',function(){
+    prefs.apiKey=this.value.trim();
+    savePrefs();
+    const s=document.getElementById('apiKeyStatus');
+    if(s) s.textContent=prefs.apiKey?'✓ Clé enregistrée':'';
+  });
+});
+
+// ══════════════════════════════════════════════════════════
+//  VIDEO FILE MODE
+// ══════════════════════════════════════════════════════════
+
+function loadVideoFile(file){
+  if(!file||!file.type.startsWith('video/')) return;
+
+  // Libère l'ancien object URL
+  if(videoFileUrl) URL.revokeObjectURL(videoFileUrl);
+  videoFileUrl=URL.createObjectURL(file);
+
+  videoMode=true;
+
+  // Cache la source screen, affiche le stage
+  document.getElementById('sourceScreen').className='';
+  document.getElementById('stage').style.display='block';
+  updateTopbarForMode();
+
+  // Configure la vidéo source
+  const vs=document.getElementById('videoSource');
+  vs.src=videoFileUrl;
+  vs.loop=false;
+  vs.muted=true;
+  vs.playbackRate=1;
+  vs.className='show';
+
+  // Cache la caméra
+  const cam=document.getElementById('camVideo');
+  cam.style.display='none';
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+
+  // Badge mode vidéo
+  document.getElementById('videoModeBadge').className='show';
+
+  vs.addEventListener('loadedmetadata',()=>{
+    resizeOverlayFromVideo(vs);
+    // Init rally netY si pas calibré
+    if(!calib.done) rally.netY=vs.videoHeight*0.5;
+    // Affiche la barre de progression
+    document.getElementById('videoProgressBar').className='show';
+    updateVpbTime(vs);
+    // Démarre auto l'analyse
+    startVideoAnalysis();
+  },{once:true});
+
+  vs.addEventListener('ended',()=>{
+    stopVideoAnalysis();
+    showToast('Vidéo terminée — résumé disponible');
+    showSummary();
+  });
+
+  vs.load();
+}
+
+function resizeOverlayFromVideo(vs){
+  const cvs=document.getElementById('overlay');
+  cvs.width=vs.videoWidth||640;
+  cvs.height=vs.videoHeight||480;
+  const ccvs=document.getElementById('calibCanvas');
+  ccvs.width=cvs.width; ccvs.height=cvs.height;
+}
+
+function startVideoAnalysis(){
+  const vs=document.getElementById('videoSource');
+  vs.play();
+  isAnalyzing=true;
+  videoAnalysisRunning=true;
+  resetStats();
+
+  // Met à jour le bouton analyser
+  const btn=document.getElementById('recBtn');
+  btn.innerHTML='<div class="ctrl-icon">⏸</div>PAUSE';
+  btn.style.background='rgba(255,68,68,.15)';
+  btn.style.borderColor='#ff4444';
+  btn.style.color='#ff4444';
+  document.getElementById('liveBadge').className='on';
+  document.getElementById('liveBadge').textContent='VIDÉO';
+  document.getElementById('vpbPlay').textContent='⏸ PAUSE';
+  document.getElementById('hint').style.opacity='0';
+
+  // Lance la boucle de progression
+  updateVpbLoop();
+}
+
+function stopVideoAnalysis(){
+  videoAnalysisRunning=false;
+  isAnalyzing=false;
+  const vs=document.getElementById('videoSource');
+  vs.pause();
+  const btn=document.getElementById('recBtn');
+  btn.innerHTML='<div class="ctrl-icon">▶</div>ANALYSER';
+  btn.style.background='rgba(0,230,118,.15)';
+  btn.style.borderColor='var(--g)';
+  btn.style.color='var(--g)';
+  document.getElementById('liveBadge').className='';
+  document.getElementById('liveBadge').textContent='PAUSE';
+  document.getElementById('vpbPlay').textContent='▶ PLAY';
+}
+
+function toggleVideoPlay(){
+  if(!videoMode) return;
+  const vs=document.getElementById('videoSource');
+  if(vs.paused){
+    vs.play();
+    isAnalyzing=true;
+    document.getElementById('vpbPlay').textContent='⏸ PAUSE';
+    document.getElementById('liveBadge').className='on';
+    document.getElementById('liveBadge').textContent='VIDÉO';
+  } else {
+    vs.pause();
+    isAnalyzing=false;
+    document.getElementById('vpbPlay').textContent='▶ PLAY';
+    document.getElementById('liveBadge').className='';
+    document.getElementById('liveBadge').textContent='PAUSE';
+  }
+}
+
+function setVideoSpeed(rate){
+  if(!videoMode) return;
+  document.getElementById('videoSource').playbackRate=rate;
+  // Highlight bouton actif
+  [0.25,0.5,1,2].forEach(r=>{
+    const id=r===1?'vpbSpeed1':null;
+    // Reset all speed buttons
+  });
+  document.querySelectorAll('.vpb-btn').forEach(b=>{
+    if(b.textContent===`× ${rate}`) b.classList.add('on');
+    else if(b.textContent.startsWith('×')) b.classList.remove('on');
+  });
+  showToast(`Vitesse × ${rate}`);
+}
+
+function changeVideoSource(){
+  stopVideoAnalysis();
+  document.getElementById('videoSource').className='';
+  document.getElementById('videoSource').src='';
+  document.getElementById('camVideo').style.display='block';
+  document.getElementById('videoProgressBar').className='';
+  document.getElementById('videoModeBadge').className='';
+  videoMode=false;
+  videoFileUrl=null;
+  resetStats();
+  updateTopbarForMode();
+  document.getElementById('sourceScreen').className='show';
+}
+
+function updateVpbTime(vs){
+  if(!vs) return;
+  const cur=vs.currentTime||0, dur=vs.duration||0;
+  const fmt=(s)=>{
+    const m=Math.floor(s/60), sec=Math.floor(s%60);
+    return `${m}:${sec.toString().padStart(2,'0')}`;
+  };
+  document.getElementById('vpbTime').textContent=`${fmt(cur)} / ${fmt(dur)}`;
+  const pct=dur>0?cur/dur*100:0;
+  document.getElementById('vpbFill').style.width=pct.toFixed(1)+'%';
+}
+
+function updateVpbLoop(){
+  if(!videoMode) return;
+  const vs=document.getElementById('videoSource');
+  updateVpbTime(vs);
+  requestAnimationFrame(updateVpbLoop);
+}
+
+// Seek en tapant sur la barre de progression
+document.addEventListener('DOMContentLoaded',()=>{
+  const track=document.getElementById('vpbTrack');
+  if(!track) return;
+  function seek(e){
+    const vs=document.getElementById('videoSource');
+    if(!vs||!vs.duration) return;
+    const rect=track.getBoundingClientRect();
+    const clientX=e.touches?e.touches[0].clientX:e.clientX;
+    const pct=Math.max(0,Math.min(1,(clientX-rect.left)/rect.width));
+    vs.currentTime=pct*vs.duration;
+  }
+  track.addEventListener('click',seek);
+  track.addEventListener('touchstart',seek,{passive:true});
+});
+
+// ── Adaptation du toggleAnalysis en mode vidéo ─────────────
+// Patch toggleAnalysis pour gérer le mode vidéo
+const _origToggleAnalysis = toggleAnalysis;
+toggleAnalysis = function(){
+  if(videoMode){ toggleVideoPlay(); return; }
+  _origToggleAnalysis();
+};
+
+// Bouton flip : caché en mode vidéo, bouton "changer" à la place
+function updateTopbarForMode(){
+  const flip=document.getElementById('flipBtn');
+  const vidChangeBtn=document.getElementById('vidChangeBtn');
+  if(flip) flip.style.display=videoMode?'none':'flex';
+  if(vidChangeBtn) vidChangeBtn.style.display=videoMode?'flex':'none';
+}
+
+// Ajoute dynamiquement le bouton "⏏ changer" en mode vidéo
+(function injectVidChangeBtn(){
+  const btn=document.createElement('div');
+  btn.id='vidChangeBtn';
+  btn.onclick=changeVideoSource;
+  btn.style.cssText='position:absolute;top:calc(var(--safe-t)+10px);right:14px;z-index:15;display:none;'+
+    'background:rgba(68,138,255,.15);border:1px solid rgba(68,138,255,.4);border-radius:20px;'+
+    'padding:5px 12px;font-family:var(--fh);font-size:12px;font-weight:700;letter-spacing:1px;'+
+    'color:#3d8eff;cursor:pointer;align-items:center;gap:6px;';
+  btn.innerHTML='⏏ CHANGER';
+  document.addEventListener('DOMContentLoaded',()=>{
+    const stage=document.getElementById('stage');
+    if(stage) stage.appendChild(btn);
+  });
+})();
+
+// ══════════════════════════════════════════════════════════
+//  BOOT — CHARGEMENT DES PREFS & CALIBRATION
+// ══════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  ['cJ1','cJ2'].forEach(id=>drawCourt(id,{}));
+  loadPrefs();          // ← charge prefs + calibration sauvegardée
+  loadCalibFromPrefs();
+  animId=requestAnimationFrame(loop);
+  init();
+});
+</script>
+</body>
+</html>
