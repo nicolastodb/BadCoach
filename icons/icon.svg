@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+
+  <!-- Fond blanc arrondi -->
+  <rect width="512" height="512" rx="88" fill="#F4F6F7"/>
+
+  <!-- Couleur unique : teal logo -->
+  <!-- #87BFCA -->
+
+  <!-- ── Cercle (raquette outline) ── -->
+  <circle cx="210" cy="252" r="196" fill="none" stroke="#87BFCA" stroke-width="13"/>
+
+  <!-- ── Volant — plumes géométriques ── -->
+  <!-- Plume gauche -->
+  <polygon fill="#87BFCA" points="180,374 70,62 108,44 200,366"/>
+  <!-- Plume centrale -->
+  <polygon fill="#87BFCA" points="195,364 180,40 220,34 230,364"/>
+  <!-- Plume droite -->
+  <polygon fill="#87BFCA" points="222,366 272,46 308,64 246,376"/>
+
+  <!-- ── Volant — liège ── -->
+  <rect fill="#87BFCA" x="176" y="378" width="72" height="35" rx="5"/>
+  <rect fill="#F4F6F7" x="176" y="391" width="72" height="7"/>
+  <ellipse fill="#87BFCA" cx="212" cy="413" rx="36" ry="19"/>
+
+  <!-- ── COACH vertical — lettres individuelles ── -->
+  <text x="394" y="120"  font-family="'Arial Black','Franklin Gothic Heavy',Impact,sans-serif" font-size="72" font-weight="900" fill="#87BFCA" text-anchor="middle">C</text>
+  <text x="394" y="195"  font-family="'Arial Black','Franklin Gothic Heavy',Impact,sans-serif" font-size="72" font-weight="900" fill="#87BFCA" text-anchor="middle">O</text>
+  <text x="394" y="270"  font-family="'Arial Black','Franklin Gothic Heavy',Impact,sans-serif" font-size="72" font-weight="900" fill="#87BFCA" text-anchor="middle">A</text>
+  <text x="394" y="345"  font-family="'Arial Black','Franklin Gothic Heavy',Impact,sans-serif" font-size="72" font-weight="900" fill="#87BFCA" text-anchor="middle">C</text>
+  <text x="394" y="420"  font-family="'Arial Black','Franklin Gothic Heavy',Impact,sans-serif" font-size="72" font-weight="900" fill="#87BFCA" text-anchor="middle">H</text>
+
+</svg>
