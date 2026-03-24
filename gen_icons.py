@@ -9,15 +9,19 @@ BG   = (10, 22, 40)        # #0a1628
 GREEN= (0, 230, 118)       # #00e676
 CYAN = (0, 229, 255)       # #00e5ff
 
-def draw_icon(size, maskable=False):
-    img = Image.new('RGBA', (size, size), (0,0,0,0))
-    d = ImageDraw.Draw(img)
+def draw_icon(size, maskable=False, opaque=False):
+    # iOS requires fully opaque PNGs — no alpha channel
+    mode = 'RGB' if opaque else 'RGBA'
+    bg   = BG   if opaque else (0, 0, 0, 0)
+    img  = Image.new(mode, (size, size), bg)
+    d    = ImageDraw.Draw(img)
 
     pad = size * 0.1 if maskable else 0
     r   = int(size * 0.18)
 
-    # Background rounded rect
-    d.rounded_rectangle([pad, pad, size-pad, size-pad], radius=r, fill=BG)
+    # Background rounded rect (skipped for opaque icons — full bg already set)
+    if not opaque:
+        d.rounded_rectangle([pad, pad, size-pad, size-pad], radius=r, fill=BG)
 
     cx, cy = size / 2, size * 0.58  # shuttlecock center
 
@@ -74,3 +78,7 @@ for sz in (192, 512):
 
 draw_icon(512, maskable=True).save(os.path.join(OUT, 'icon-maskable-512.png'))
 print('icon-maskable-512.png saved')
+
+# iOS apple-touch-icon: 180×180, fully opaque (no alpha), full bleed (no rounded corners)
+draw_icon(180, opaque=True).save(os.path.join(OUT, 'apple-touch-icon.png'))
+print('apple-touch-icon.png (180x180 opaque) saved')
