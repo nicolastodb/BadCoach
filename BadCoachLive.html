@@ -1639,6 +1639,89 @@ function updateShuttle(pos){
 }
 
 // ══════════════════════════════════════════════════════════
+//  ANALYSE TRAJECTOIRE VOLANT
+// ══════════════════════════════════════════════════════════
+function analyzeShuttleTrajectory(){
+  const pts=shuttle.trail.filter(Boolean);
+  if(pts.length<5){ shuttle.traj=null; return; }
+
+  const recent=pts.slice(-6);
+  const dx=recent[recent.length-1][0]-recent[0][0];
+  const dy=recent[recent.length-1][1]-recent[0][1];
+  const speed=Math.hypot(dx,dy);
+
+  // Phase
+  let phase='FLAT';
+  if(dy<-4) phase='MONTÉE';
+  else if(dy>4) phase='DESCENTE';
+
+  // Angle en degrés (0=horizontal, positif vers le bas)
+  const angle=Math.round(Math.atan2(dy,Math.abs(dx||1))*180/Math.PI);
+
+  // Vecteur par frame
+  const vx=dx/Math.max(recent.length-1,1);
+  const vy=dy/Math.max(recent.length-1,1);
+
+  // Prédiction : extrapolation avec gravité progressive
+  const last=recent[recent.length-1];
+  const pred=[];
+  for(let i=1;i<=10;i++){
+    const gravity=0.25*i*i; // accélération vers le bas
+    pred.push([last[0]+vx*i, last[1]+vy*i+gravity]);
+  }
+
+  shuttle.traj={phase, angle, speed, vx, vy, pred};
+}
+
+// ══════════════════════════════════════════════════════════
+//  CLASSIFICATION MOUVEMENT JOUEUR
+// ══════════════════════════════════════════════════════════
+function classifyPlayerMovement(p){
+  if(!p||!p.keypoints) return null;
+  const kps=p.keypoints;
+  const S=CFG.POSE_SCORE;
+  const speed=p.speed||0;
+
+  let state='IMMOBILE';
+  if(speed>12) state='SPRINT';
+  else if(speed>3) state='DÉPL.';
+
+  const la=kps[15], ra=kps[16];
+  const lh=kps[11], rh=kps[12];
+  const nose=kps[0];
+
+  // Fente : écart horizontal chevilles > 90% hauteur corps
+  if(la&&ra&&lh&&rh&&la.score>=S&&ra.score>=S&&lh.score>=S&&rh.score>=S){
+    const spread=Math.abs(la.x-ra.x);
+    const pelvisY=(lh.y+rh.y)/2;
+    const ankleY=(la.y+ra.y)/2;
+    const legLen=Math.max(ankleY-pelvisY,1);
+    if(spread>legLen*1.1) state='FENTE';
+  }
+
+  // Saut : chevilles anormalement proches du bassin en Y
+  if(la&&ra&&lh&&rh&&nose&&la.score>=S&&ra.score>=S&&lh.score>=S&&rh.score>=S&&nose.score>=S){
+    const pelvisY=(lh.y+rh.y)/2;
+    const ankleY=(la.y+ra.y)/2;
+    const bodyH=Math.max(ankleY-nose.y,1);
+    const legRatio=(ankleY-pelvisY)/bodyH;
+    if(legRatio<0.35&&speed>4) state='SAUT';
+  }
+
+  // Direction de déplacement (depuis le trail bassin)
+  let dir=null;
+  const tr=p.pelvisTrail||[];
+  if(tr.length>=4){
+    const dx=tr[tr.length-1][0]-tr[Math.max(0,tr.length-5)][0];
+    const dy=tr[tr.length-1][1]-tr[Math.max(0,tr.length-5)][1];
+    if(Math.hypot(dx,dy)>3) dir={dx,dy};
+  }
+
+  p.movement={state,dir};
+  return p.movement;
+}
+
+// ══════════════════════════════════════════════════════════
 //  SHOT CLASSIFICATION
 // ══════════════════════════════════════════════════════════
 function classifyShot(){
@@ -1822,12 +1905,34 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
     ctx.beginPath(); ctx.moveTo(pts[i-1][0],pts[i-1][1]); ctx.lineTo(pts[i][0],pts[i][1]); ctx.stroke();
   }
 
+  // ── Trajectoire prédite (pointillés) ──────────────────
+  if(shuttle.traj&&shuttle.traj.pred&&shuttlePos){
+    ctx.strokeStyle='rgba(0,229,255,.3)';
+    ctx.lineWidth=1.5;
+    ctx.setLineDash([4,5]);
+    ctx.beginPath();
+    ctx.moveTo(shuttlePos[0],shuttlePos[1]);
+    shuttle.traj.pred.forEach(([px,py])=>ctx.lineTo(px,py));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
   // ── Volant ─────────────────────────────────────────────
   if(shuttlePos){
     ctx.strokeStyle=CFG.C_SH; ctx.lineWidth=2;
     ctx.beginPath(); ctx.arc(shuttlePos[0],shuttlePos[1],11,0,Math.PI*2); ctx.stroke();
     ctx.fillStyle='#fff';
     ctx.beginPath(); ctx.arc(shuttlePos[0],shuttlePos[1],3,0,Math.PI*2); ctx.fill();
+
+    // Phase + angle
+    if(shuttle.traj){
+      const phaseIcon={'MONTÉE':'↑','DESCENTE':'↓','FLAT':'→'}[shuttle.traj.phase]||'';
+      ctx.fillStyle='rgba(0,229,255,.9)';
+      ctx.font='bold 13px JetBrains Mono,monospace';
+      ctx.textAlign='center';
+      ctx.fillText(`${phaseIcon} ${shuttle.traj.angle}°`,shuttlePos[0],shuttlePos[1]-18);
+      ctx.textAlign='left';
+    }
   }
 
   // ── Joueurs (squelette MoveNet) ────────────────────────
@@ -1870,19 +1975,60 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
     // Label joueur (au-dessus du nez ou de la bbox)
     const nose=p.keypoints?.[0];
     const labelX=nose&&nose.score>=CFG.POSE_SCORE ? nose.x : (p.bbox?p.bbox[0]+p.bbox[2]/2:W/2);
-    const labelY=nose&&nose.score>=CFG.POSE_SCORE ? nose.y-20 : (p.bbox?p.bbox[1]-8:20);
+    const labelY=nose&&nose.score>=CFG.POSE_SCORE ? nose.y-18 : (p.bbox?p.bbox[1]-8:20);
     ctx.fillStyle=col;
     ctx.font='bold 13px Barlow Condensed,sans-serif';
     ctx.textAlign='center';
     ctx.fillText(`J${i+1}`,labelX,labelY);
     ctx.textAlign='left';
 
-    // Vitesse bassin (px/f affiché)
-    if(p.speed>0.5 && p.pelvis){
-      ctx.fillStyle=col+'cc';
-      ctx.font='10px JetBrains Mono,monospace';
+    // ── Flèche de déplacement ─────────────────────────
+    const mv=p.movement;
+    if(mv&&mv.dir&&p.pelvis){
+      const {dx,dy}=mv.dir;
+      const norm=Math.hypot(dx,dy);
+      if(norm>2){
+        const ux=dx/norm, uy=dy/norm;
+        const arrowLen=Math.min(44, norm*3);
+        const ax=p.pelvis[0], ay=p.pelvis[1];
+        const ex=ax+ux*arrowLen, ey=ay+uy*arrowLen;
+        ctx.strokeStyle=col+'ee'; ctx.lineWidth=3; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(ex,ey); ctx.stroke();
+        // Pointe de flèche
+        const ha=Math.atan2(uy,ux), hs=9;
+        ctx.beginPath();
+        ctx.moveTo(ex,ey);
+        ctx.lineTo(ex-hs*Math.cos(ha-.5),ey-hs*Math.sin(ha-.5));
+        ctx.moveTo(ex,ey);
+        ctx.lineTo(ex-hs*Math.cos(ha+.5),ey-hs*Math.sin(ha+.5));
+        ctx.stroke();
+      }
+    }
+
+    // ── Badge état du mouvement ───────────────────────
+    if(mv&&mv.state&&mv.state!=='IMMOBILE'&&p.pelvis){
+      const stateCol={
+        'DÉPL.':col,'SPRINT':'#ffc400','FENTE':'#ff4081','SAUT':'#00e5ff'
+      }[mv.state]||col;
+      const bx=p.pelvis[0], by=p.pelvis[1]-28;
+      ctx.font='bold 10px JetBrains Mono,monospace';
       ctx.textAlign='center';
-      ctx.fillText(`${p.speed.toFixed(1)}px/f`,labelX,labelY-14);
+      const tw=ctx.measureText(mv.state).width;
+      ctx.fillStyle='rgba(0,0,0,.65)';
+      ctx.beginPath();
+      ctx.roundRect(bx-tw/2-5,by-12,tw+10,15,4);
+      ctx.fill();
+      ctx.fillStyle=stateCol;
+      ctx.fillText(mv.state,bx,by);
+      ctx.textAlign='left';
+    }
+
+    // Vitesse bassin (px/f)
+    if(p.speed>0.5&&p.pelvis){
+      ctx.fillStyle=col+'99';
+      ctx.font='9px JetBrains Mono,monospace';
+      ctx.textAlign='center';
+      ctx.fillText(`${p.speed.toFixed(1)}px/f`,labelX,labelY-13);
       ctx.textAlign='left';
     }
   });
@@ -2058,6 +2204,10 @@ async function loop(){
     detections=players.lastDet||[];
   }
 
+  // ── Trajectoire volant & mouvement joueurs ────────────
+  analyzeShuttleTrajectory();
+  players.list.forEach(p=>classifyPlayerMovement(p));
+
   // ── Classify shot ──────────────────────────────────────
   const shot=classifyShot();
 
@@ -2114,8 +2264,14 @@ function showShotFlash(type){
 function updateTopUI(fps){
   const tot=Object.values(shots.counts).reduce((a,b)=>a+b,0);
   document.getElementById('sTot').textContent=tot;
-  document.getElementById('sShuttle').textContent=shuttle.lastPos?'●':'○';
-  document.getElementById('sShuttle').style.color=shuttle.lastPos?'var(--c)':'rgba(255,255,255,.3)';
+  if(shuttle.traj&&shuttle.lastPos){
+    const pi={'MONTÉE':'↑','DESCENTE':'↓','FLAT':'→'}[shuttle.traj.phase]||'●';
+    document.getElementById('sShuttle').textContent=pi;
+    document.getElementById('sShuttle').style.color='var(--c)';
+  } else {
+    document.getElementById('sShuttle').textContent=shuttle.lastPos?'●':'○';
+    document.getElementById('sShuttle').style.color=shuttle.lastPos?'var(--c)':'rgba(255,255,255,.3)';
+  }
   const elapsed=(Date.now()-startTime)/1000;
   document.getElementById('sRhythm').textContent=elapsed>5?(tot/(elapsed/60)).toFixed(1):'—';
   // Cellule 4 : durée échange en cours si actif, sinon FPS
