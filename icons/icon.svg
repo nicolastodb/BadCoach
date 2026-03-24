@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="#0a1628"/>
+
+  <!-- Shuttlecock feathers (fan shape) -->
+  <g transform="translate(256,300)" fill="none" stroke="#00e676" stroke-width="6" stroke-linecap="round">
+    <line x1="0" y1="-140" x2="-55" y2="-210" opacity="0.5"/>
+    <line x1="0" y1="-140" x2="-28" y2="-220" opacity="0.7"/>
+    <line x1="0" y1="-140" x2="0"   y2="-225"/>
+    <line x1="0" y1="-140" x2="28"  y2="-220" opacity="0.7"/>
+    <line x1="0" y1="-140" x2="55"  y2="-210" opacity="0.5"/>
+    <!-- Arc top -->
+    <path d="M -55 -210 Q 0 -240 55 -210" stroke="#00e676" stroke-width="5" fill="none" opacity="0.7"/>
+  </g>
+
+  <!-- Shuttlecock cork (ball) -->
+  <circle cx="256" cy="300" r="22" fill="#00e676"/>
+  <circle cx="256" cy="300" r="14" fill="#0a1628"/>
+  <circle cx="256" cy="300" r="7"  fill="#00e676"/>
+
+  <!-- "BC" text -->
+  <text x="256" y="440"
+        font-family="Arial Black, sans-serif"
+        font-size="100" font-weight="900"
+        fill="#00e5ff" text-anchor="middle"
+        letter-spacing="8">BC</text>
+</svg>
