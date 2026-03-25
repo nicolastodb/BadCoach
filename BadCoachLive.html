@@ -273,9 +273,16 @@ html,body{height:100%;overflow:hidden;background:#07111D;color:var(--text);font-
   display:flex;align-items:center;gap:10px;
 }
 #calibTitle{font-size:16px;font-weight:800;letter-spacing:3px;color:var(--g)}
+#acAutoBtn{
+  margin-left:auto;font-size:11px;font-weight:700;letter-spacing:1.5px;
+  padding:5px 12px;border:1px solid rgba(94,196,208,.4);border-radius:6px;
+  background:rgba(94,196,208,.12);color:var(--g);cursor:pointer;
+  font-family:var(--fh);transition:all .15s;
+}
+#acAutoBtn:active{background:rgba(94,196,208,.3)}
 #calibCancel{
-  margin-left:auto;font-size:12px;font-weight:700;letter-spacing:1.5px;
-  padding:6px 14px;border:1px solid var(--border);border-radius:6px;
+  font-size:12px;font-weight:700;letter-spacing:1.5px;
+  padding:6px 12px;border:1px solid var(--border);border-radius:6px;
   background:rgba(255,255,255,.08);color:var(--muted);cursor:pointer;
   font-family:var(--fh);
 }
@@ -329,6 +336,34 @@ html,body{height:100%;overflow:hidden;background:#07111D;color:var(--text);font-
 #calibBadge.show{opacity:1}
 
 /* ══ NEW FEATURES CSS ════════════════════════════════════ */
+
+/* ── AUTO COURT DETECTION ── */
+#autoCalibPanel{
+  position:absolute;bottom:0;left:0;right:0;z-index:50;
+  display:none;flex-direction:column;gap:10px;
+  padding:14px 16px calc(var(--safe-b)+14px);
+  background:rgba(0,0,0,.85);border-top:1px solid rgba(94,196,208,.3);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+}
+#autoCalibPanel.show{display:flex}
+#autoCalibMsg{
+  font-family:var(--fm);font-size:11px;letter-spacing:2px;
+  color:var(--g);text-align:center;
+}
+.ac-btns{display:flex;gap:10px;justify-content:center}
+.ac-btn{
+  font-family:var(--fh);font-size:14px;font-weight:800;letter-spacing:1.5px;
+  padding:11px 24px;border:none;border-radius:10px;cursor:pointer;transition:all .15s;
+}
+.ac-btn.confirm{background:var(--g);color:#000}
+.ac-btn.manual{background:rgba(255,255,255,.1);color:var(--muted);border:1px solid var(--border)}
+.ac-btn:active{transform:scale(.95)}
+#autoCalibSpin{
+  display:none;width:20px;height:20px;margin:0 auto;
+  border:2px solid rgba(94,196,208,.2);border-top-color:var(--g);
+  border-radius:50%;animation:spin .75s linear infinite;
+}
+#autoCalibSpin.show{display:block}
 
 /* Overlay minimaliste */
 body.minimal #statsBar .stats-row{display:none}
@@ -759,7 +794,8 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
     <div id="calibTop">
       <div id="calibTitle">📐 CALIBRATION</div>
       <div id="calibInstruction">Tape les 4 coins du terrain</div>
-      <div id="calibCancel" onclick="cancelCalib()">ANNULER</div>
+      <div id="acAutoBtn" onclick="startAutoCourtDetect()" title="Détection automatique">🔍 AUTO</div>
+      <div id="calibCancel" onclick="cancelCalib()">✕</div>
     </div>
     <div id="calibStep">
       <div class="calib-dot current" id="cdot0"></div>
@@ -769,6 +805,16 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
     </div>
     <canvas id="calibCanvas"></canvas>
     <button id="calibDone" onclick="finishCalib()">✓ VALIDER</button>
+
+    <!-- Panel auto-détection -->
+    <div id="autoCalibPanel">
+      <div id="autoCalibSpin"></div>
+      <div id="autoCalibMsg">ANALYSE EN COURS…</div>
+      <div class="ac-btns" id="autoCalibBtns" style="display:none">
+        <button class="ac-btn confirm" onclick="confirmAutoCalib()">✓ CONFIRMER</button>
+        <button class="ac-btn manual" onclick="rejectAutoCalib()">AJUSTER</button>
+      </div>
+    </div>
   </div>
 
   <!-- Stats bottom bar -->
@@ -1219,7 +1265,7 @@ async function chooseCamera(){
   document.getElementById('stage').style.display='block';
   videoMode=false;
   await switchCamera();
-  if(!calib.done) setTimeout(startCalib, 600);
+  if(!calib.done) setTimeout(startAutoCourtDetect, 600);
 }
 
 function showDropZone(){
@@ -1461,6 +1507,256 @@ function getZone(rx,ry){
 }
 
 // ══════════════════════════════════════════════════════════
+//  AUTO COURT DETECTION  (Hough transform)
+// ══════════════════════════════════════════════════════════
+const autoCourtDet = { preview: null };
+
+// Hough transform sur image downsamplée — renvoie les pics de lignes
+function _houghLines(imageData, W, H){
+  const scale = Math.max(1, Math.ceil(W / 320));
+  const dW = Math.floor(W/scale), dH = Math.floor(H/scale);
+  const d = imageData.data;
+
+  // ── Grayscale downsamplé ─────────────────────────────
+  const gray = new Uint8Array(dW*dH);
+  for(let y=0;y<dH;y++){
+    for(let x=0;x<dW;x++){
+      let s=0,c=0;
+      for(let dy=0;dy<scale;dy++) for(let dx=0;dx<scale;dx++){
+        const sy=y*scale+dy, sx=x*scale+dx;
+        if(sy<H&&sx<W){const i=(sy*W+sx)*4;s+=d[i]*.299+d[i+1]*.587+d[i+2]*.114;c++;}
+      }
+      gray[y*dW+x]=c?s/c:0;
+    }
+  }
+
+  // ── Sobel magnitude ──────────────────────────────────
+  const mag=new Float32Array(dW*dH);
+  let maxM=1;
+  for(let y=1;y<dH-1;y++){
+    for(let x=1;x<dW-1;x++){
+      const i=y*dW+x;
+      const gx=-gray[i-dW-1]+gray[i-dW+1]-2*gray[i-1]+2*gray[i+1]-gray[i+dW-1]+gray[i+dW+1];
+      const gy= gray[i-dW-1]+2*gray[i-dW]+gray[i-dW+1]-gray[i+dW-1]-2*gray[i+dW]-gray[i+dW+1];
+      const m=Math.sqrt(gx*gx+gy*gy);
+      mag[i]=m; if(m>maxM) maxM=m;
+    }
+  }
+
+  // ── Hough accumulator ────────────────────────────────
+  const NT=180, NR=260;
+  const D=Math.sqrt(dW*dW+dH*dH);
+  const acc=new Int32Array(NR*NT);
+  const cosT=new Float32Array(NT), sinT=new Float32Array(NT);
+  for(let t=0;t<NT;t++){const a=t*Math.PI/NT;cosT[t]=Math.cos(a);sinT[t]=Math.sin(a);}
+
+  const thresh=maxM*0.22;
+  let nVoters=0;
+  for(let y=2;y<dH-2;y++){
+    for(let x=2;x<dW-2;x++){
+      if(mag[y*dW+x]<thresh) continue;
+      nVoters++;
+      for(let t=0;t<NT;t++){
+        const rho=x*cosT[t]+y*sinT[t];
+        const ri=Math.round((rho+D)/(2*D)*(NR-1));
+        if(ri>=0&&ri<NR) acc[ri*NT+t]++;
+      }
+    }
+  }
+  if(nVoters<60) return null;
+
+  // ── Non-maximum suppression → peaks ─────────────────
+  let maxAcc=1;
+  for(let i=0;i<NR*NT;i++) if(acc[i]>maxAcc) maxAcc=acc[i];
+  const WIN=6, pthr=Math.max(15,maxAcc*0.18);
+  const peaks=[];
+  for(let r=WIN;r<NR-WIN;r++){
+    for(let t=WIN;t<NT-WIN;t++){
+      const v=acc[r*NT+t];
+      if(v<pthr) continue;
+      let ok=true;
+      outer: for(let dr=-WIN;dr<=WIN;dr++)
+        for(let dt=-WIN;dt<=WIN;dt++)
+          if((dr||dt)&&acc[(r+dr)*NT+(t+dt)]>=v){ok=false;break outer;}
+      if(ok) peaks.push({
+        rho:(r/(NR-1))*2*D-D,
+        theta:t*Math.PI/NT,
+        v, _scale:scale, _dW:dW, _dH:dH
+      });
+    }
+  }
+  peaks.sort((a,b)=>b.v-a.v);
+  return peaks.length>=4 ? peaks : null;
+}
+
+// Intersection de deux lignes Hough (rho/theta paramétrisation)
+function _hIntersect(p1,p2){
+  const c1=Math.cos(p1.theta),s1=Math.sin(p1.theta);
+  const c2=Math.cos(p2.theta),s2=Math.sin(p2.theta);
+  const det=c1*s2-c2*s1;
+  if(Math.abs(det)<1e-6) return null;
+  return [(p1.rho*s2-p2.rho*s1)/det, (c1*p2.rho-c2*p1.rho)/det];
+}
+
+// Extrait les 4 coins du terrain depuis les pics Hough
+// Retourne [fondG, fondD, filetG, filetD] en coordonnées image originale
+function _extractCourtCorners(peaks, W, H){
+  if(!peaks||peaks.length<4) return null;
+  const {_scale:scale, _dW:dW, _dH:dH}=peaks[0];
+
+  // Classifie : horizontales (normal ≈ vertical, θ ∈ 60°-120°) vs latérales
+  const horiz=[], sides=[];
+  for(const p of peaks.slice(0,30)){
+    const deg=p.theta*180/Math.PI;
+    if(deg>55&&deg<125) horiz.push(p); else sides.push(p);
+  }
+  if(horiz.length<2||sides.length<2) return null;
+
+  // Pour les horizontales : y au centre (x=dW/2)
+  const hh=horiz.map(p=>({...p,
+    yMid:(p.rho-dW/2*Math.cos(p.theta))/Math.sin(p.theta)
+  })).sort((a,b)=>a.yMid-b.yMid);
+
+  // Pour les latérales : x au centre (y=dH/2)
+  const ss=sides.map(p=>({...p,
+    xMid:Math.abs(Math.cos(p.theta))>0.03?(p.rho-dH/2*Math.sin(p.theta))/Math.cos(p.theta):dW/2
+  })).sort((a,b)=>a.xMid-b.xMid);
+
+  // Ligne du fond (back): horizontale la plus haute dans 0–50% du cadre
+  const backCands=hh.filter(p=>p.yMid>=0&&p.yMid<dH*0.55);
+  if(!backCands.length) return null;
+  const backLine=backCands[0];
+
+  // Ligne du filet: horizontale sous le fond, dans 20–85% du cadre
+  const netCands=hh.filter(p=>p.yMid>backLine.yMid+dH*0.08&&p.yMid<dH*0.88);
+  if(!netCands.length) return null;
+  const netLine=netCands.sort((a,b)=>b.v-a.v)[0];
+
+  // Lignes latérales gauche/droite
+  const leftLine=ss[0], rightLine=ss[ss.length-1];
+  if(leftLine===rightLine) return null;
+
+  // Calcul des 4 intersections (en espace downsamplé)
+  const fgD =_hIntersect(backLine,leftLine);
+  const fdD =_hIntersect(backLine,rightLine);
+  const ngD =_hIntersect(netLine, leftLine);
+  const ndD =_hIntersect(netLine, rightLine);
+  if(!fgD||!fdD||!ngD||!ndD) return null;
+
+  // Repasse en coordonnées image originale
+  const corners=[[fgD,fdD,ngD,ndD].map(([x,y])=>[x*scale,y*scale])][0];
+  const [fgX,fgY]=corners[0],[fdX,fdY]=corners[1];
+  const [ngX,ngY]=corners[2],[ndX,ndY]=corners[3];
+
+  // Validation géométrique
+  const marg=W*0.4;
+  if(corners.some(([cx,cy])=>cx<-marg||cx>W+marg||cy<-marg||cy>H+marg)) return null;
+  if(ngY<=fgY+H*0.05||ndY<=fdY+H*0.05) return null;          // filet doit être sous le fond
+  if(fdX-fgX<W*0.25||ndX-ngX<W*0.25) return null;           // largeur minimale
+  if((ngY-fgY)<H*0.08&&(ndY-fdY)<H*0.08) return null;       // hauteur minimale
+
+  return corners;
+}
+
+// ── Point d'entrée : capture la frame courante et détecte ──
+function startAutoCourtDetect(){
+  const vid=videoMode
+    ? document.getElementById('videoSource')
+    : document.getElementById('camVideo');
+  if(!vid||vid.readyState<2){ setTimeout(startCalib,300); return; }
+
+  const W=vid.videoWidth||640, H=vid.videoHeight||480;
+  const ccvs=document.getElementById('calibCanvas');
+  ccvs.width=W; ccvs.height=H;
+
+  // Ouvre l'overlay de calibration + panel auto
+  document.getElementById('calibOverlay').className='show';
+  document.getElementById('autoCalibPanel').className='show';
+  document.getElementById('autoCalibSpin').className='show';
+  document.getElementById('autoCalibMsg').textContent='ANALYSE DU TERRAIN…';
+  document.getElementById('autoCalibBtns').style.display='none';
+  // Cache les étapes manuelles
+  document.getElementById('calibStep').style.display='none';
+  document.getElementById('calibInstruction').style.display='none';
+
+  // Capture la frame
+  const tmp=document.createElement('canvas');
+  tmp.width=W; tmp.height=H;
+  tmp.getContext('2d').drawImage(vid,0,0,W,H);
+  const imgData=tmp.getContext('2d').getImageData(0,0,W,H);
+
+  setTimeout(()=>{
+    const peaks=_houghLines(imgData,W,H);
+    const corners=_extractCourtCorners(peaks,W,H);
+
+    document.getElementById('autoCalibSpin').className='';
+
+    if(corners){
+      autoCourtDet.preview=corners;
+      // Dessine la preview sur le calibCanvas
+      const ctx=ccvs.getContext('2d');
+      ctx.clearRect(0,0,W,H);
+      // Contour terrain
+      ctx.strokeStyle='rgba(94,196,208,.9)';ctx.lineWidth=2.5;ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(corners[0][0],corners[0][1]);ctx.lineTo(corners[1][0],corners[1][1]);
+      ctx.lineTo(corners[3][0],corners[3][1]);ctx.lineTo(corners[2][0],corners[2][1]);
+      ctx.closePath();ctx.stroke();
+      // Filet
+      ctx.strokeStyle=CFG.C_NET;ctx.lineWidth=3;ctx.setLineDash([10,6]);
+      ctx.beginPath();ctx.moveTo(corners[2][0],corners[2][1]);ctx.lineTo(corners[3][0],corners[3][1]);
+      ctx.stroke();ctx.setLineDash([]);
+      // Coins colorés + labels
+      const lbl=['FOND G','FOND D','FILET G','FILET D'];
+      corners.forEach(([x,y],i)=>{
+        ctx.fillStyle='rgba(0,0,0,.6)';
+        ctx.beginPath();ctx.arc(x,y,14,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=CALIB_COLORS[i];
+        ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#fff';ctx.font='bold 9px Barlow Condensed,sans-serif';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(lbl[i],x,y);
+      });
+      ctx.textAlign='left';ctx.textBaseline='alphabetic';
+
+      document.getElementById('autoCalibMsg').textContent='TERRAIN DÉTECTÉ ✓';
+      document.getElementById('autoCalibBtns').style.display='flex';
+    } else {
+      document.getElementById('autoCalibMsg').textContent='NON DÉTECTÉ — CALIBRATION MANUELLE';
+      setTimeout(()=>{
+        document.getElementById('autoCalibPanel').className='';
+        _showManualCalib();
+      },1400);
+    }
+  }, 30);
+}
+
+function confirmAutoCalib(){
+  if(!autoCourtDet.preview) return;
+  calib.points=autoCourtDet.preview.map(([x,y])=>[Math.round(x),Math.round(y)]);
+  document.getElementById('autoCalibPanel').className='';
+  document.getElementById('calibStep').style.display='';
+  document.getElementById('calibInstruction').style.display='';
+  finishCalib();
+}
+
+function rejectAutoCalib(){
+  document.getElementById('autoCalibPanel').className='';
+  _showManualCalib();
+}
+
+function _showManualCalib(){
+  document.getElementById('calibStep').style.display='';
+  document.getElementById('calibInstruction').style.display='';
+  // Réinitialise la calibration manuelle
+  calib.step=0; calib.points=[];
+  updateCalibUI(); renderCalibCanvas();
+  const ccvs=document.getElementById('calibCanvas');
+  ccvs.addEventListener('touchend',onCalibTouch,{passive:false});
+  ccvs.addEventListener('click',onCalibClick);
+}
+
+// ══════════════════════════════════════════════════════════
 //  CALIBRATION — FONCTIONS
 // ══════════════════════════════════════════════════════════
 
@@ -1468,10 +1764,15 @@ function startCalib(){
   if(isAnalyzing) toggleAnalysis();
   calib.active=true; calib.step=0; calib.points=[];
   document.getElementById('calibOverlay').className='show';
+  document.getElementById('autoCalibPanel').className='';
+  document.getElementById('calibStep').style.display='';
+  document.getElementById('calibInstruction').style.display='';
   const cvs=document.getElementById('overlay');
   const ccvs=document.getElementById('calibCanvas');
   ccvs.width=cvs.width||640; ccvs.height=cvs.height||480;
   updateCalibUI(); renderCalibCanvas();
+  ccvs.removeEventListener('touchend',onCalibTouch);
+  ccvs.removeEventListener('click',onCalibClick);
   ccvs.addEventListener('touchend',onCalibTouch,{passive:false});
   ccvs.addEventListener('click',onCalibClick);
 }
@@ -3702,7 +4003,7 @@ function loadVideoFile(file){
       setAnalysisDensity(1); // reset au précis pour les courtes vidéos
     }
 
-    if(!calib.done){ vs.pause(); setTimeout(startCalib, 400); }
+    if(!calib.done){ vs.pause(); setTimeout(startAutoCourtDetect, 400); }
     else startVideoAnalysis();
   },{once:true});
 
