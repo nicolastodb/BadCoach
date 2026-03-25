@@ -794,17 +794,24 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
     <div class="vpb-track" id="vpbTrack">
       <div class="vpb-fill" id="vpbFill" style="width:0%"></div>
     </div>
+    <!-- Ligne 1 : lecture + vitesse -->
     <div class="vpb-row">
       <div class="vpb-time" id="vpbTime">0:00 / 0:00</div>
       <div class="vpb-btn" id="vpbPlay" onclick="toggleVideoPlay()">⏸ PAUSE</div>
-      <div class="vpb-btn" onclick="setVideoSpeed(0.25)">× 0.25</div>
-      <div class="vpb-btn" onclick="setVideoSpeed(0.5)">× 0.5</div>
-      <div class="vpb-btn on" id="vpbSpeed1" onclick="setVideoSpeed(1)">× 1</div>
-      <div class="vpb-btn" onclick="setVideoSpeed(2)">× 2</div>
-      <div class="vpb-btn" id="vpbD1" onclick="setAnalysisDensity(1)" title="Analyse chaque frame">PRÉCIS</div>
-      <div class="vpb-btn" id="vpbD2" onclick="setAnalysisDensity(2)" title="Analyse 1 frame sur 2 — idéal &gt;30 min">RAPIDE</div>
-      <div class="vpb-btn" id="vpbD3" onclick="setAnalysisDensity(3)" title="Analyse 1 frame sur 3 — matchs complets">ULTRA</div>
-      <div class="vpb-btn" onclick="changeVideoSource()">⏏ CHANGER</div>
+      <div style="width:1px;height:16px;background:var(--border);flex-shrink:0"></div>
+      <div class="vpb-btn" onclick="setVideoSpeed(0.25)">×0.25</div>
+      <div class="vpb-btn" onclick="setVideoSpeed(0.5)">×0.5</div>
+      <div class="vpb-btn on" id="vpbSpeed1" onclick="setVideoSpeed(1)">×1</div>
+      <div class="vpb-btn" onclick="setVideoSpeed(2)">×2</div>
+      <div style="margin-left:auto"></div>
+      <div class="vpb-btn" onclick="changeVideoSource()">⏏</div>
+    </div>
+    <!-- Ligne 2 : densité d'analyse -->
+    <div class="vpb-row" style="justify-content:center;gap:6px">
+      <span style="font-family:var(--fm);font-size:9px;color:var(--muted);letter-spacing:1px;flex-shrink:0">ANALYSE</span>
+      <div class="vpb-btn on" id="vpbD1" onclick="setAnalysisDensity(1)">PRÉCIS</div>
+      <div class="vpb-btn" id="vpbD2" onclick="setAnalysisDensity(2)">RAPIDE ×½</div>
+      <div class="vpb-btn" id="vpbD3" onclick="setAnalysisDensity(3)">ULTRA ×⅓</div>
     </div>
   </div>
 
@@ -1874,80 +1881,95 @@ function checkBounce(){
 // ══════════════════════════════════════════════════════════
 //  SKELETON DRAWING (MoveNet keypoints réels)
 // ══════════════════════════════════════════════════════════
+// Groupes de connexions par segment corporel
+const SKEL_GROUPS = {
+  head:  [[0,1],[0,2],[1,3],[2,4]],
+  torso: [[5,6],[5,11],[6,12],[11,12]],
+  arms:  [[5,7],[7,9],[6,8],[8,10]],
+  legs:  [[11,13],[13,15],[12,14],[14,16]],
+};
+
 function drawSkeleton(ctx, kps, col){
   if(!kps || kps.length < 17) return;
   const S = CFG.POSE_SCORE;
-
-  // ── Connexions ─────────────────────────────────────────
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  SKEL_CONN.forEach(([a,b])=>{
-    const ka = kps[a], kb = kps[b];
-    if(!ka || !kb || ka.score < S || kb.score < S) return;
-    ctx.strokeStyle = col + 'bb';
-    ctx.lineWidth   = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(ka.x, ka.y);
-    ctx.lineTo(kb.x, kb.y);
-    ctx.stroke();
+
+  // ── Couleurs par groupe ────────────────────────────────
+  const segCol = {
+    head:  col + 'aa',
+    torso: col + 'ff',
+    arms:  col + 'dd',
+    legs:  col + 'cc',
+  };
+
+  // ── Passe 1 : halo sombre (contraste sur n'importe quel fond) ──
+  Object.entries(SKEL_GROUPS).forEach(([grp, pairs])=>{
+    pairs.forEach(([a,b])=>{
+      const ka=kps[a], kb=kps[b];
+      if(!ka||!kb||ka.score<S||kb.score<S) return;
+      ctx.strokeStyle='rgba(0,0,0,.55)';
+      ctx.lineWidth=5;
+      ctx.beginPath(); ctx.moveTo(ka.x,ka.y); ctx.lineTo(kb.x,kb.y); ctx.stroke();
+    });
   });
 
-  // ── Articulations neutres ──────────────────────────────
+  // ── Passe 2 : segments colorés ────────────────────────
+  Object.entries(SKEL_GROUPS).forEach(([grp, pairs])=>{
+    pairs.forEach(([a,b])=>{
+      const ka=kps[a], kb=kps[b];
+      if(!ka||!kb||ka.score<S||kb.score<S) return;
+      ctx.strokeStyle=segCol[grp];
+      ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(ka.x,ka.y); ctx.lineTo(kb.x,kb.y); ctx.stroke();
+    });
+  });
+
+  // ── Articulations (halo noir + point coloré) ──────────
   kps.forEach((kp, i)=>{
-    if(!kp || kp.score < S) return;
-    // sauter les points de la tête (moins pertinents au badminton)
-    if(i <= 4) return;
-    ctx.fillStyle = col + '99';
-    ctx.beginPath();
-    ctx.arc(kp.x, kp.y, 3, 0, Math.PI*2);
-    ctx.fill();
+    if(!kp || kp.score < S || i <= 4) return; // skip tête
+    // halo
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.beginPath(); ctx.arc(kp.x,kp.y,5,0,Math.PI*2); ctx.fill();
+    // point
+    ctx.fillStyle = col + 'dd';
+    ctx.beginPath(); ctx.arc(kp.x,kp.y,3,0,Math.PI*2); ctx.fill();
   });
 
-  // ── Pieds (chevilles) ─────────────────────────────────
+  // ── Pieds (chevilles) — plus grands ───────────────────
   [15, 16].forEach(i=>{
     const kp = kps[i];
     if(!kp || kp.score < S) return;
-    ctx.fillStyle   = CFG.C_FOOT;
-    ctx.strokeStyle = '#000000aa';
-    ctx.lineWidth   = 1;
-    ctx.beginPath();
-    ctx.arc(kp.x, kp.y, 6, 0, Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.beginPath(); ctx.arc(kp.x,kp.y,8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = CFG.C_FOOT;
+    ctx.beginPath(); ctx.arc(kp.x,kp.y,5,0,Math.PI*2); ctx.fill();
   });
 
   // ── Bassin (milieu hanches) ────────────────────────────
   const lh = kps[11], rh = kps[12];
   if(lh && rh && lh.score >= S && rh.score >= S){
     const px = (lh.x + rh.x) / 2, py = (lh.y + rh.y) / 2;
-    ctx.fillStyle   = col;
-    ctx.strokeStyle = '#000000aa';
-    ctx.lineWidth   = 1;
-    ctx.beginPath();
-    ctx.arc(px, py, 5, 0, Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill();
   }
 
-  // ── Poignet raquette (droite=10 par défaut) ───────────
-  // On choisit le poignet avec le score le plus élevé
+  // ── Poignet raquette ──────────────────────────────────
   const lw9 = kps[9], rw10 = kps[10];
   const racketKp = (rw10 && lw9)
     ? (rw10.score >= lw9.score ? rw10 : lw9)
     : (rw10 || lw9);
   if(racketKp && racketKp.score >= S){
-    ctx.fillStyle   = CFG.C_WRIST;
-    ctx.strokeStyle = '#000000aa';
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath();
-    ctx.arc(racketKp.x, racketKp.y, 8, 0, Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
-    // Cercle raquette
-    ctx.strokeStyle = CFG.C_WRIST + '66';
-    ctx.lineWidth   = 1.5;
-    ctx.beginPath();
-    ctx.arc(racketKp.x, racketKp.y, 15, 0, Math.PI*2);
-    ctx.stroke();
+    // halo + point
+    ctx.fillStyle='rgba(0,0,0,.6)';
+    ctx.beginPath(); ctx.arc(racketKp.x,racketKp.y,11,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = CFG.C_WRIST;
+    ctx.beginPath(); ctx.arc(racketKp.x,racketKp.y,7,0,Math.PI*2); ctx.fill();
+    // cercle raquette
+    ctx.strokeStyle = CFG.C_WRIST+'88';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(racketKp.x,racketKp.y,16,0,Math.PI*2); ctx.stroke();
   }
 }
 
@@ -2043,14 +2065,20 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
       drawSkeleton(ctx, p.keypoints, col);
     }
 
-    // Label joueur (au-dessus du nez ou de la bbox)
+    // Label joueur — badge avec fond pour lisibilité
     const nose=p.keypoints?.[0];
-    const labelX=nose&&nose.score>=CFG.POSE_SCORE ? nose.x : (p.bbox?p.bbox[0]+p.bbox[2]/2:W/2);
-    const labelY=nose&&nose.score>=CFG.POSE_SCORE ? nose.y-18 : (p.bbox?p.bbox[1]-8:20);
-    ctx.fillStyle=col;
-    ctx.font='bold 13px Barlow Condensed,sans-serif';
+    const labelX=nose&&nose.score>=CFG.POSE_SCORE?nose.x:(p.bbox?p.bbox[0]+p.bbox[2]/2:W/2);
+    const labelY=nose&&nose.score>=CFG.POSE_SCORE?nose.y-22:(p.bbox?p.bbox[1]-10:20);
+    const lbl=`J${i+1}`;
+    ctx.font='bold 14px Barlow Condensed,sans-serif';
     ctx.textAlign='center';
-    ctx.fillText(`J${i+1}`,labelX,labelY);
+    const tw=ctx.measureText(lbl).width;
+    // fond
+    ctx.fillStyle='rgba(0,0,0,.72)';
+    ctx.beginPath(); ctx.roundRect(labelX-tw/2-5,labelY-13,tw+10,17,4); ctx.fill();
+    // texte
+    ctx.fillStyle=col;
+    ctx.fillText(lbl,labelX,labelY);
     ctx.textAlign='left';
 
     // ── Flèche de déplacement ─────────────────────────
@@ -2116,24 +2144,39 @@ function draw(ctx, W, H, shuttlePos, detections, shot){
 // ══════════════════════════════════════════════════════════
 //  POSE PROCESSING (appelé en callback async, hors boucle)
 // ══════════════════════════════════════════════════════════
+function _poseCenter(pose, fallbackP){
+  const kps=pose.keypoints;
+  const lh=kps[11], rh=kps[12];
+  if(lh&&rh&&lh.score>=CFG.POSE_SCORE&&rh.score>=CFG.POSE_SCORE)
+    return [(lh.x+rh.x)/2,(lh.y+rh.y)/2];
+  if(pose.box) return [pose.box.xMin+pose.box.width/2, pose.box.yMin+pose.box.height/2];
+  if(fallbackP) return [fallbackP.cx,fallbackP.cy];
+  return null;
+}
+
 function processPosesResult(poses, W, H){
   const matched=[null,null];
   const used=new Set();
+
+  // Matching par position prédite (position courante + vélocité)
   for(let slot=0;slot<2;slot++){
     const prev=players.list[slot];
     if(!prev||prev.cx==null) continue;
+    // Position prédite : applique vélocité lissée
+    const predX=prev.cx+(prev.vx||0);
+    const predY=prev.cy+(prev.vy||0);
     let best=-1, bestD=Infinity;
     poses.forEach((pose,pi)=>{
       if(used.has(pi)) return;
-      const kps=pose.keypoints;
-      const lh=kps[11], rh=kps[12];
-      const pcx=lh&&rh?(lh.x+rh.x)/2:(pose.box?(pose.box.xMin+pose.box.width/2):prev.cx);
-      const pcy=lh&&rh?(lh.y+rh.y)/2:(pose.box?(pose.box.yMin+pose.box.height/2):prev.cy);
-      const dist=Math.hypot(pcx-prev.cx,pcy-prev.cy);
+      const c=_poseCenter(pose,prev);
+      if(!c) return;
+      const dist=Math.hypot(c[0]-predX,c[1]-predY);
       if(dist<bestD){bestD=dist;best=pi;}
     });
-    if(best>=0){matched[slot]=poses[best];used.add(best);}
+    // Seuil de réassignation : max 25% de la largeur du cadre
+    if(best>=0&&bestD<W*0.25){matched[slot]=poses[best];used.add(best);}
   }
+  // Poses restantes → remplissent les slots vides
   poses.forEach((pose,pi)=>{
     if(used.has(pi)) return;
     const s=matched.findIndex(m=>m===null);
@@ -2142,15 +2185,26 @@ function processPosesResult(poses, W, H){
 
   matched.forEach((pose,i)=>{
     if(!pose) return;
-    if(!players.list[i]) players.list[i]={pelvisTrail:[],wristTrail:[],trail:[],stepCount:0,_prevFeet:{},speed:0};
+    if(!players.list[i]) players.list[i]={
+      pelvisTrail:[],wristTrail:[],trail:[],
+      stepCount:0,_prevFeet:{},speed:0,vx:0,vy:0
+    };
     const p=players.list[i];
     const kps=pose.keypoints;
 
+    // ── Lissage EMA adaptatif ──────────────────────────
+    // Plus le mouvement est grand, moins on lisse (pour suivre les sprints)
     if(p.keypoints&&p.keypoints.length===17){
+      // amplitude du mouvement estimée depuis le bassin
+      const c=_poseCenter(pose,p);
+      const movDist=c&&p.pelvis?Math.hypot(c[0]-p.pelvis[0],c[1]-p.pelvis[1]):0;
+      // alpha = poids du NOUVEAU keypoint : 0.25 (immobile) → 0.55 (sprint)
+      const alpha=Math.min(0.55, 0.25+movDist*0.012);
+      const beta=1-alpha;
       kps.forEach((kp,ki)=>{
         if(kp.score>=CFG.POSE_SCORE&&p.keypoints[ki].score>=CFG.POSE_SCORE){
-          kp.x=p.keypoints[ki].x*.55+kp.x*.45;
-          kp.y=p.keypoints[ki].y*.55+kp.y*.45;
+          kp.x=p.keypoints[ki].x*beta+kp.x*alpha;
+          kp.y=p.keypoints[ki].y*beta+kp.y*alpha;
         }
       });
     }
@@ -2160,9 +2214,15 @@ function processPosesResult(poses, W, H){
     const lh=kps[11],rh=kps[12];
     if(lh&&rh&&lh.score>=CFG.POSE_SCORE&&rh.score>=CFG.POSE_SCORE){
       const px=(lh.x+rh.x)/2,py=(lh.y+rh.y)/2;
-      if(p.pelvis) p.speed=Math.hypot(px-p.pelvis[0],py-p.pelvis[1]);
+      if(p.pelvis){
+        const rawVx=px-p.pelvis[0], rawVy=py-p.pelvis[1];
+        // Vélocité lissée (EMA 0.4) pour le matching prédictif
+        p.vx=(p.vx||0)*0.6+rawVx*0.4;
+        p.vy=(p.vy||0)*0.6+rawVy*0.4;
+        p.speed=Math.hypot(rawVx,rawVy);
+      }
       p.pelvis=[px,py]; p.cx=px; p.cy=py;
-      p.pelvisTrail.push([px,py]); if(p.pelvisTrail.length>30) p.pelvisTrail.shift();
+      p.pelvisTrail.push([px,py]); if(p.pelvisTrail.length>40) p.pelvisTrail.shift();
       p.trail.push([px,py]); if(p.trail.length>20) p.trail.shift();
       const zone=getZoneCalib(px,py,W,H);
       p.zone=zone;
@@ -2171,6 +2231,8 @@ function processPosesResult(poses, W, H){
     } else if(p.bbox){
       p.cx=p.bbox[0]+p.bbox[2]/2;
       p.cy=p.bbox[1]+p.bbox[3]/2;
+      // Amortit la vélocité si on perd le bassin
+      p.vx=(p.vx||0)*0.5; p.vy=(p.vy||0)*0.5;
     }
 
     const lw9=kps[9],rw10=kps[10];
