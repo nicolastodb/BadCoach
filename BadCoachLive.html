@@ -160,11 +160,26 @@ html,body{height:100%;overflow:hidden;background:#07111D;color:var(--text);font-
 #loadScreen{
   position:fixed;inset:0;z-index:100;
   background:radial-gradient(ellipse 80% 60% at 50% 60%,rgba(0,40,60,.55) 0%,#07111D 70%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
 }
-#loadLogo{font-size:36px;font-weight:800;letter-spacing:4px;opacity:.95}
-#loadLogo em{color:var(--g);font-style:normal}
+#loadLogo{width:140px;height:140px;object-fit:contain;border-radius:28px;
+  box-shadow:0 8px 40px rgba(135,191,202,.25);animation:logofade 1s ease both}
+@keyframes logofade{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
 #loadMsg{font-family:var(--fm);font-size:11px;color:var(--muted);letter-spacing:2px}
+#loadStack{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  margin-top:4px;
+}
+#loadStack .ls-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;
+}
+#loadStack .ls-chip{
+  font-family:var(--fm);font-size:9px;letter-spacing:1px;
+  color:rgba(135,191,202,.55);
+  border:1px solid rgba(135,191,202,.18);
+  border-radius:4px;padding:2px 7px;white-space:nowrap;
+}
+#loadStack .ls-chip span{color:rgba(135,191,202,.85);font-weight:600}
 .spinner{
   width:36px;height:36px;
   border:2px solid rgba(94,196,208,.18);border-top-color:var(--g);
@@ -463,9 +478,9 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
   gap:0;padding:24px;
 }
 #sourceScreen.show{display:flex}
-.src-logo{font-size:32px;font-weight:800;letter-spacing:4px;margin-bottom:6px}
-.src-logo em{color:var(--g);font-style:normal}
-.src-tagline{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:36px}
+.src-logo{width:90px;height:90px;object-fit:contain;border-radius:18px;margin-bottom:6px;
+  box-shadow:0 4px 24px rgba(135,191,202,.2)}
+.src-tagline{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:28px}
 .src-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:380px;margin-bottom:16px}
 .src-card{
   background:rgba(255,255,255,.04);border:1px solid var(--border);
@@ -632,7 +647,7 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 
 <!-- ── SOURCE SELECTION SCREEN ── -->
 <div id="sourceScreen">
-  <div class="src-logo">BAD<em>COACH</em></div>
+  <img class="src-logo" src="icons/icon-512.png" alt="BadCoach">
   <div class="src-tagline">CHOISIR LA SOURCE</div>
   <div class="src-cards">
     <div class="src-card cam" onclick="chooseCamera()">
@@ -656,9 +671,21 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 
 <!-- ── LOADING SCREEN ── -->
 <div id="loadScreen">
-  <div id="loadLogo">BAD<em>COACH</em></div>
+  <img id="loadLogo" src="icons/icon-512.png" alt="BadCoach">
   <div class="spinner" id="spinner"></div>
   <div id="loadMsg">CHARGEMENT DU MODÈLE IA…</div>
+  <div id="loadStack">
+    <div class="ls-row">
+      <div class="ls-chip">TensorFlow.js <span>4.17</span></div>
+      <div class="ls-chip">MoveNet <span>MULTIPOSE</span></div>
+      <div class="ls-chip">Kalman Filter</div>
+    </div>
+    <div class="ls-row">
+      <div class="ls-chip">Canvas 2D / <span>WebGL</span></div>
+      <div class="ls-chip">MediaDevices <span>getUserMedia</span></div>
+      <div class="ls-chip">PWA <span>Service Worker</span></div>
+    </div>
+  </div>
   <button id="startBtn" onclick="showSourceScreen()">DÉMARRER</button>
 </div>
 
