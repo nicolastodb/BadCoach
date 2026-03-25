@@ -516,15 +516,58 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
 .src-logo{width:90px;height:90px;object-fit:contain;border-radius:18px;margin-bottom:6px;
   box-shadow:0 4px 24px rgba(135,191,202,.2)}
 .src-tagline{font-family:var(--fm);font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:28px}
-.src-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:380px;margin-bottom:16px}
+.src-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:480px;margin-bottom:16px}
 .src-card{
   background:rgba(255,255,255,.04);border:1px solid var(--border);
-  border-radius:16px;padding:24px 14px;text-align:center;cursor:pointer;
+  border-radius:16px;padding:20px 10px;text-align:center;cursor:pointer;
   transition:all .2s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 12px rgba(0,0,0,.3);
 }
 .src-card:active{transform:scale(.96);box-shadow:none}
 .src-card.cam{border-color:rgba(94,196,208,.3);background:rgba(94,196,208,.04)}
 .src-card.vid{border-color:rgba(61,142,255,.3);background:rgba(61,142,255,.04)}
+.src-card.lnk{border-color:rgba(184,160,216,.3);background:rgba(184,160,216,.04)}
+
+/* ── URL MODAL ── */
+#urlModal{
+  position:fixed;inset:0;z-index:200;display:none;
+  align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,.65);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+#urlModal.show{display:flex}
+.url-sheet{
+  width:100%;max-width:520px;
+  background:linear-gradient(180deg,#0d1b2e 0%,#07111D 100%);
+  border-top:1px solid var(--border);border-radius:20px 20px 0 0;
+  padding:20px 20px calc(20px + var(--safe-b));
+}
+.url-sheet-handle{width:40px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 18px}
+.url-sheet-title{font-size:15px;font-weight:800;letter-spacing:2px;margin-bottom:16px;color:var(--p)}
+.url-input-row{display:flex;gap:8px;margin-bottom:14px}
+#urlInput{
+  flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;color:var(--text);font-family:var(--fm);
+  font-size:13px;outline:none;
+}
+#urlInput:focus{border-color:var(--p);background:rgba(184,160,216,.08)}
+#urlInput::placeholder{color:var(--muted)}
+.url-go-btn{
+  background:var(--p);color:#07111D;border:none;border-radius:10px;
+  padding:0 18px;font-weight:800;font-size:13px;letter-spacing:1px;cursor:pointer;
+  white-space:nowrap;
+}
+.url-divider{display:flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--muted);font-size:11px;letter-spacing:1px}
+.url-divider::before,.url-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.url-screen-btn{
+  width:100%;padding:13px;border-radius:12px;border:1px solid rgba(94,196,208,.3);
+  background:rgba(94,196,208,.06);color:var(--g);font-size:13px;font-weight:700;
+  letter-spacing:1px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.url-screen-btn:disabled{opacity:.35;cursor:default}
+.url-close-btn{
+  width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:12px;letter-spacing:1px;cursor:pointer;
+}
+.url-hint{font-size:10px;color:var(--muted);line-height:1.6;margin-top:10px;text-align:center}
 .src-card-icon{font-size:36px;margin-bottom:10px}
 .src-card-title{font-size:16px;font-weight:800;letter-spacing:2px;margin-bottom:4px}
 .src-card-sub{font-size:11px;color:var(--muted);line-height:1.5}
@@ -694,6 +737,29 @@ body.minimal .ctrl-btn:not(#recBtn):not(#minBtn){opacity:.4;pointer-events:none}
       <div class="src-card-icon">🎬</div>
       <div class="src-card-title">VIDÉO</div>
       <div class="src-card-sub">Importe un<br>fichier vidéo</div>
+    </div>
+    <div class="src-card lnk" onclick="showUrlModal()">
+      <div class="src-card-icon">🔗</div>
+      <div class="src-card-title">LIEN</div>
+      <div class="src-card-sub">YouTube ou<br>autre plateforme</div>
+    </div>
+  </div>
+
+  <!-- URL / Screen capture modal -->
+  <div id="urlModal">
+    <div class="url-sheet">
+      <div class="url-sheet-handle"></div>
+      <div class="url-sheet-title">ANALYSER PAR LIEN</div>
+      <div class="url-input-row">
+        <input id="urlInput" type="url" placeholder="https://youtube.com/watch?v=..." autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')handleVideoUrl(this.value)">
+        <button class="url-go-btn" onclick="handleVideoUrl(document.getElementById('urlInput').value)">GO</button>
+      </div>
+      <div class="url-divider">OU</div>
+      <button class="url-screen-btn" id="screenCaptureBtn" onclick="startScreenCapture()">
+        <span>🖥️</span> CAPTURER L'ÉCRAN
+      </button>
+      <div class="url-hint" id="screenCaptureHint">Ouvre YouTube dans un autre onglet,<br>puis appuie sur "Capturer l'écran" et sélectionne l'onglet.</div>
+      <button class="url-close-btn" onclick="closeUrlModal()">ANNULER</button>
     </div>
   </div>
   <div class="src-drop" id="srcDrop" onclick="document.getElementById('videoFileInput').click()">
@@ -3950,6 +4016,177 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(s) s.textContent=prefs.apiKey?'✓ Clé enregistrée':'';
   });
 });
+
+// ══════════════════════════════════════════════════════════
+//  URL / SCREEN CAPTURE MODE
+// ══════════════════════════════════════════════════════════
+
+let screenCaptureStream = null;
+
+function showUrlModal(){
+  const modal = document.getElementById('urlModal');
+  modal.classList.add('show');
+  // Disable screen capture button if API not available
+  const btn = document.getElementById('screenCaptureBtn');
+  const hint = document.getElementById('screenCaptureHint');
+  if(!navigator.mediaDevices?.getDisplayMedia){
+    btn.disabled = true;
+    hint.textContent = 'La capture d\'écran n\'est pas disponible sur cet appareil.';
+  }
+  setTimeout(()=>document.getElementById('urlInput').focus(), 100);
+}
+
+function closeUrlModal(){
+  document.getElementById('urlModal').classList.remove('show');
+  document.getElementById('urlInput').value = '';
+}
+
+// Detect if URL is a direct video file
+function _isDirectVideoUrl(url){
+  try{
+    const path = new URL(url).pathname.toLowerCase();
+    return /\.(mp4|webm|mov|avi|m3u8|ogg|mkv)(\?|$)/.test(path);
+  }catch(e){ return false; }
+}
+
+function handleVideoUrl(url){
+  url = (url||'').trim();
+  if(!url){ showToast('Entre un lien valide'); return; }
+  // Normalize — add protocol if missing
+  if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+
+  closeUrlModal();
+
+  if(_isDirectVideoUrl(url)){
+    loadVideoFromUrl(url);
+  } else {
+    // Platform link (YouTube, Vimeo, etc.) — need screen capture
+    showToast('Lien plateforme détecté — utilise la capture d\'écran');
+    // Re-open modal on the capture section
+    const modal = document.getElementById('urlModal');
+    modal.classList.add('show');
+    document.getElementById('urlInput').value = url;
+  }
+}
+
+function loadVideoFromUrl(url){
+  videoMode = true;
+
+  // Hide source screen, show stage
+  document.getElementById('sourceScreen').className = '';
+  document.getElementById('stage').style.display = 'block';
+  updateTopbarForMode();
+
+  const vs = document.getElementById('videoSource');
+  vs.crossOrigin = 'anonymous';
+  vs.src = url;
+  vs.loop = false;
+  vs.muted = true;
+  vs.playbackRate = 1;
+  vs.className = 'show';
+
+  // Hide camera
+  const cam = document.getElementById('camVideo');
+  cam.style.display = 'none';
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+
+  document.getElementById('videoModeBadge').className = 'show';
+
+  vs.addEventListener('loadedmetadata', ()=>{
+    resizeOverlayFromVideo(vs);
+    if(!calib.done) rally.netY = vs.videoHeight * 0.5;
+    document.getElementById('videoProgressBar').className = 'show';
+    updateVpbTime(vs);
+    const dur = vs.duration || 0;
+    if(dur > 3600){ setAnalysisDensity(3); showToast(`Vidéo longue — Mode Ultra activé`); }
+    else if(dur > 1800){ setAnalysisDensity(2); showToast(`Vidéo longue — Mode Rapide activé`); }
+    else { setAnalysisDensity(1); }
+    if(!calib.done){ vs.pause(); setTimeout(startAutoCourtDetect, 400); }
+    else startVideoAnalysis();
+  }, {once:true});
+
+  vs.addEventListener('error', ()=>{
+    showToast('❌ Impossible de charger ce lien (CORS ou format)');
+    // Offer screen capture fallback
+    document.getElementById('sourceScreen').className = 'show';
+    document.getElementById('stage').style.display = 'none';
+    videoMode = false;
+    setTimeout(showUrlModal, 300);
+  }, {once:true});
+
+  vs.addEventListener('ended', ()=>{
+    stopVideoAnalysis();
+    showToast('Vidéo terminée — résumé disponible');
+    showSummary();
+  });
+
+  vs.load();
+}
+
+function startScreenCapture(){
+  if(!navigator.mediaDevices?.getDisplayMedia){
+    showToast('Capture d\'écran non disponible'); return;
+  }
+  closeUrlModal();
+  navigator.mediaDevices.getDisplayMedia({
+    video: { frameRate: { ideal: 30 }, displaySurface: 'browser' },
+    audio: false
+  }).then(captureStream => {
+    screenCaptureStream = captureStream;
+    videoMode = true;
+
+    // Hide source screen, show stage
+    document.getElementById('sourceScreen').className = '';
+    document.getElementById('stage').style.display = 'block';
+    updateTopbarForMode();
+
+    // Use camVideo element (live stream, no seek bar needed)
+    const cam = document.getElementById('camVideo');
+    cam.style.transform = 'none'; // no mirror for screen capture
+    cam.style.display = 'block';
+    cam.style.objectFit = 'contain';
+    cam.srcObject = captureStream;
+    cam.play().catch(()=>{});
+
+    // Hide file video element
+    document.getElementById('videoSource').className = '';
+
+    document.getElementById('videoModeBadge').className = 'show';
+    document.getElementById('videoModeBadge').textContent = '🖥️ CAPTURE';
+
+    // Stop analysis when stream ends (user stops sharing)
+    captureStream.getTracks()[0].addEventListener('ended', ()=>{
+      stopVideoAnalysis();
+      cam.srcObject = null;
+      cam.style.transform = '';
+      cam.style.objectFit = '';
+      screenCaptureStream = null;
+      showToast('Capture arrêtée');
+      showSummary();
+    });
+
+    cam.addEventListener('loadedmetadata', ()=>{
+      const cvs = document.getElementById('overlay');
+      cvs.width = cam.videoWidth || 1280;
+      cvs.height = cam.videoHeight || 720;
+      const ccvs = document.getElementById('calibCanvas');
+      ccvs.width = cvs.width; ccvs.height = cvs.height;
+      if(!calib.done) rally.netY = cvs.height * 0.5;
+      if(!calib.done){ setTimeout(startAutoCourtDetect, 400); }
+      else { isAnalyzing = true; videoAnalysisRunning = true; resetStats(); loop(); }
+    }, {once:true});
+
+    // Update badges
+    document.getElementById('liveBadge').className = 'on';
+    document.getElementById('liveBadge').textContent = 'LIVE';
+    showToast('Capture active — analyse en cours');
+  }).catch(err => {
+    if(err.name !== 'NotAllowedError'){
+      showToast('Erreur capture: ' + err.message);
+    }
+    // User cancelled — silently go back
+  });
+}
 
 // ══════════════════════════════════════════════════════════
 //  VIDEO FILE MODE
