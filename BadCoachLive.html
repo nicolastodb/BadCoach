@@ -2,587 +2,1179 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>BadCoach — Tactiques Badminton</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:#0a0e1a;color:#e0e6f0;min-height:100vh;display:flex;flex-direction:column;overflow:hidden;height:100vh}
-header{background:#111827;padding:12px 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #1e2d45;flex-shrink:0}
-header h1{font-size:1.25rem;font-weight:700;color:#f97316}
-header .sub{color:#475569;font-size:.85rem;margin-left:4px}
-.mode-toggle{margin-left:auto;display:flex;background:#1e2d45;border-radius:8px;padding:3px;gap:2px}
-.mode-toggle button{padding:5px 14px;border:none;background:none;color:#94a3b8;cursor:pointer;border-radius:6px;font-size:.8rem;transition:all .2s}
-.mode-toggle button.active{background:#f97316;color:#fff}
-.main{flex:1;display:grid;grid-template-columns:260px 1fr 300px;min-height:0;overflow:hidden}
-.sidebar{background:#111827;border-right:1px solid #1e2d45;display:flex;flex-direction:column;overflow:hidden}
-.cat-list{padding:8px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid #1e2d45;flex-shrink:0}
-.cat-btn{display:flex;align-items:center;gap:8px;padding:8px 10px;border:none;background:none;color:#94a3b8;cursor:pointer;border-radius:7px;font-size:.85rem;text-align:left;width:100%;transition:all .2s}
-.cat-btn:hover{background:#1e2d45;color:#e0e6f0}
-.cat-btn.active{background:rgba(249,115,22,.15);color:#f97316}
-.cat-btn .ic{width:20px;text-align:center}
-.tactic-list{flex:1;overflow-y:auto;padding:6px}
-.tactic-list::-webkit-scrollbar{width:4px}
-.tactic-list::-webkit-scrollbar-track{background:transparent}
-.tactic-list::-webkit-scrollbar-thumb{background:#1e2d45;border-radius:2px}
-.tc{padding:10px;border-radius:7px;cursor:pointer;transition:all .2s;border:1px solid transparent;margin-bottom:4px}
-.tc:hover{background:#1e2d45}
-.tc.active{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3)}
-.tc h3{font-size:.85rem;font-weight:600;margin-bottom:3px;color:#e0e6f0}
-.tc p{font-size:.75rem;color:#64748b;line-height:1.4}
-.badge{display:inline-block;font-size:.68rem;padding:2px 7px;border-radius:4px;margin-bottom:5px;font-weight:500}
-.bd{background:rgba(34,197,94,.12);color:#22c55e}
-.bi{background:rgba(249,115,22,.12);color:#f97316}
-.ba{background:rgba(239,68,68,.12);color:#ef4444}
-.court-area{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;background:#0d1424;gap:10px}
-.court-wrap{position:relative;width:100%;max-width:280px}
-.court-wrap svg{width:100%;border-radius:6px;display:block}
-.legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-.li{display:flex;align-items:center;gap:5px;font-size:.72rem;color:#64748b}
-.ld{width:9px;height:9px;border-radius:50%}
-.ll{width:20px;height:2px;border-radius:1px}
-.detail{background:#111827;border-left:1px solid #1e2d45;padding:20px;overflow-y:auto}
-.detail::-webkit-scrollbar{width:4px}
-.detail::-webkit-scrollbar-track{background:transparent}
-.detail::-webkit-scrollbar-thumb{background:#1e2d45;border-radius:2px}
-.detail h2{font-size:1rem;font-weight:700;margin-bottom:6px;color:#f0f6ff}
-.detail-desc{font-size:.82rem;color:#94a3b8;line-height:1.6;margin-bottom:16px}
-.dsec{margin-bottom:16px}
-.dsec h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#475569;margin-bottom:8px}
-.tip{display:flex;align-items:flex-start;gap:7px;padding:7px 0;border-bottom:1px solid #1e2d45;font-size:.8rem;color:#cbd5e1;line-height:1.5}
+:root{
+  --bg:#09111f;--bg2:#0f1c32;--bg3:#060e1c;
+  --card:#111f38;--border:#1a3050;--border2:#243d60;
+  --text:#dce8f8;--muted:#4a6484;--dim:#243350;
+  --accent:#f97316;--accent-lo:rgba(249,115,22,.12);
+  --blue:#3b82f6;--green:#22c55e;--red:#ef4444;--purple:#a855f7;--gray:#94a3b8;
+  --r:9px;--r2:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100dvh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+
+/* ── HEADER ── */
+header{
+  height:48px;display:flex;align-items:center;gap:10px;padding:0 16px;
+  background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.logo{font-size:1.2rem;font-weight:800;color:var(--accent);letter-spacing:-.5px}
+.logo b{color:var(--text);font-weight:300}
+.subtitle{color:var(--muted);font-size:.78rem}
+.pills{margin-left:auto;display:flex;background:#080f1c;border-radius:20px;padding:3px;gap:2px}
+.pill{padding:4px 14px;border:none;background:none;color:var(--muted);cursor:pointer;border-radius:16px;font-size:.78rem;font-weight:700;transition:all .2s;letter-spacing:.02em}
+.pill.on{background:var(--accent);color:#fff}
+.pill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ── LAYOUT ── */
+.layout{display:flex;height:calc(100dvh - 48px);overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:256px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--bg2);border-right:1px solid var(--border);overflow:hidden;
+}
+.cats{padding:8px;display:flex;flex-direction:column;gap:1px;border-bottom:1px solid var(--border)}
+.cat{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;
+  border:none;background:none;color:var(--muted);cursor:pointer;border-radius:var(--r2);
+  font-size:.83rem;text-align:left;width:100%;transition:all .15s;
+}
+.cat:hover{background:var(--dim);color:var(--text)}
+.cat.on{background:var(--accent-lo);color:var(--accent)}
+.cat .ic{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
+.tlist{flex:1;overflow-y:auto;padding:5px}
+.tlist::-webkit-scrollbar{width:3px}
+.tlist::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.tc{
+  padding:10px;border-radius:var(--r2);cursor:pointer;
+  border:1px solid transparent;margin-bottom:3px;transition:all .15s;
+}
+.tc:hover{background:var(--dim)}
+.tc.on{background:var(--accent-lo);border-color:rgba(249,115,22,.25)}
+.tc h3{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:3px;line-height:1.3}
+.tc p{font-size:.73rem;color:var(--muted);line-height:1.4}
+.lv{display:inline-block;font-size:.64rem;font-weight:700;padding:2px 7px;border-radius:3px;margin-bottom:4px;text-transform:uppercase;letter-spacing:.05em}
+.lD{background:rgba(34,197,94,.1);color:#22c55e}
+.lI{background:rgba(249,115,22,.1);color:var(--accent)}
+.lA{background:rgba(239,68,68,.1);color:#ef4444}
+
+/* ── COURT AREA ── */
+.court-area{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;padding:14px;background:var(--bg3);overflow:hidden;
+}
+.court-wrap{position:relative;width:100%;max-width:240px;flex-shrink:0}
+.court-wrap svg{width:100%;border-radius:8px;display:block;touch-action:none}
+.ctrl-wrap{display:flex;flex-direction:column;gap:6px;align-items:center;width:100%;max-width:280px}
+.ctrl-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+.btn{
+  padding:5px 12px;border:1px solid var(--border2);background:var(--card);
+  color:var(--text);cursor:pointer;border-radius:20px;font-size:.73rem;font-weight:600;
+  transition:all .15s;display:flex;align-items:center;gap:5px;line-height:1;
+}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.atype{display:flex;gap:4px;align-items:center}
+.at{
+  width:24px;height:24px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:all .15s;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.62rem;font-weight:700;color:#fff;
+}
+.at:hover,.at.on{border-color:#fff;transform:scale(1.1)}
+.at.on{box-shadow:0 0 0 3px rgba(255,255,255,.15)}
+.hint{font-size:.71rem;color:var(--muted);text-align:center;min-height:14px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-size:.7rem;color:var(--muted)}
+.li{display:flex;align-items:center;gap:4px}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ll{width:18px;height:2px;border-radius:1px;flex-shrink:0}
+
+/* ── DETAIL ── */
+.detail{
+  width:284px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--border);
+  overflow-y:auto;padding:18px 16px;
+}
+.detail::-webkit-scrollbar{width:3px}
+.detail::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.detail h2{font-size:.98rem;font-weight:700;color:var(--text);margin-bottom:6px;line-height:1.3}
+.ddesc{font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.dsec{margin-bottom:15px}
+.dsec h4{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;font-weight:700}
+.tip{display:flex;align-items:flex-start;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem;color:#c8d8ea;line-height:1.5}
 .tip:last-child{border-bottom:none}
-.tipdot{width:5px;height:5px;border-radius:50%;background:#f97316;margin-top:6px;flex-shrink:0}
-.box{border-radius:7px;padding:11px;font-size:.8rem;color:#cbd5e1;line-height:1.55}
-.box-o{background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2)}
-.box-b{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2)}
-.empty{text-align:center;padding:40px 16px;color:#475569;font-size:.88rem}
-.empty .big{font-size:2rem;margin-bottom:10px}
-@media(max-width:860px){
-  body{overflow:auto;height:auto}
-  .main{grid-template-columns:1fr;grid-template-rows:auto auto auto}
-  .sidebar{max-height:220px;border-right:none;border-bottom:1px solid #1e2d45}
-  .cat-list{flex-direction:row;flex-wrap:wrap;gap:4px}
-  .cat-btn{width:auto;flex:1;min-width:100px;justify-content:center}
-  .detail{border-left:none;border-top:1px solid #1e2d45}
+.td{width:5px;height:5px;min-width:5px;border-radius:50%;background:var(--accent);margin-top:6px}
+.box{border-radius:var(--r2);padding:10px;font-size:.78rem;color:#c0d4e8;line-height:1.55}
+.bo{background:rgba(249,115,22,.06);border:1px solid rgba(249,115,22,.18)}
+.bb{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.18)}
+.empty{text-align:center;padding:40px 12px;color:var(--muted);font-size:.84rem}
+.empty-i{font-size:2.2rem;margin-bottom:10px}
+
+/* ── MOBILE TABS ── */
+.mob-tabs{display:none;height:49px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0}
+.mtab{flex:1;padding:0;border:none;background:none;color:var(--muted);font-size:.75rem;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-top:2px solid transparent;transition:all .15s}
+.mtab.on{color:var(--accent);border-top-color:var(--accent)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .sidebar{width:220px}
+  .detail{width:240px}
+}
+@media(max-width:700px){
+  html,body{height:100dvh;overflow:hidden}
+  .layout{flex-direction:column;position:relative;overflow:visible}
+  .sidebar,.detail{
+    position:fixed;inset:48px 0 49px;z-index:50;
+    width:100%;height:auto;border:none;display:none;overflow-y:auto;
+  }
+  .sidebar.show,.detail.show{display:flex}
+  .court-area{flex:1;padding:10px;justify-content:center}
+  .court-wrap{max-width:200px}
+  .mob-tabs{display:flex}
+  .subtitle{display:none}
 }
 </style>
 </head>
 <body>
+
 <header>
-  <span style="font-size:1.4rem">🏸</span>
-  <h1>BadCoach</h1>
-  <span class="sub">Tactiques & Stratégies</span>
-  <div class="mode-toggle">
-    <button class="active" id="modeS" onclick="setMode('singles')">Simple</button>
-    <button id="modeD" onclick="setMode('doubles')">Double</button>
+  <span class="logo">Bad<b>Coach</b></span>
+  <span class="subtitle">🏸 Tactiques Badminton</span>
+  <div class="pills">
+    <button class="pill on" id="mS" onclick="setMode('s')">Simple</button>
+    <button class="pill" id="mD" onclick="setMode('d')">Double</button>
   </div>
 </header>
-<div class="main">
-  <div class="sidebar">
-    <div class="cat-list" id="catList"></div>
-    <div class="tactic-list" id="tacticList"></div>
+
+<div class="layout" id="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="cats" id="cats"></div>
+    <div class="tlist" id="tlist"></div>
   </div>
+
+  <!-- COURT -->
   <div class="court-area">
     <div class="court-wrap">
-      <svg id="courtSvg" viewBox="0 0 300 540"></svg>
+      <svg id="court" viewBox="0 0 300 540"
+        aria-label="Terrain de badminton interactif" role="img"
+        xmlns="http://www.w3.org/2000/svg">
+      </svg>
+    </div>
+    <div class="ctrl-wrap">
+      <div class="ctrl-row">
+        <button class="btn on" id="bView" onclick="setEdit(false)">👁 Tactique</button>
+        <button class="btn" id="bEdit" onclick="setEdit(true)">✏️ Éditer librement</button>
+        <button class="btn" id="bReset" onclick="resetCourt()">↺</button>
+      </div>
+      <div class="ctrl-row" id="editCtrl" style="display:none">
+        <span style="font-size:.7rem;color:var(--muted)">Flèche :</span>
+        <div class="atype">
+          <div class="at on" style="background:#ef4444" title="Smash" onclick="setAC(this,'#ef4444')">S</div>
+          <div class="at" style="background:#3b82f6" title="Dégagé/Lift" onclick="setAC(this,'#3b82f6')">D</div>
+          <div class="at" style="background:#f97316" title="Amorti" onclick="setAC(this,'#f97316')">A</div>
+          <div class="at" style="background:#22c55e" title="Filet" onclick="setAC(this,'#22c55e')">F</div>
+          <div class="at" style="background:#94a3b8" title="Déplacement" onclick="setAC(this,'#94a3b8')">M</div>
+        </div>
+        <button class="btn" onclick="clearArrows()">🗑</button>
+      </div>
+      <div class="hint" id="hint"></div>
     </div>
     <div class="legend" id="legend"></div>
   </div>
+
+  <!-- DETAIL -->
   <div class="detail" id="detail">
-    <div class="empty"><div class="big">🏸</div>Sélectionnez une tactique pour voir les détails et la visualisation</div>
+    <div class="empty"><div class="empty-i">🏸</div>Choisissez une tactique dans la liste</div>
   </div>
+
 </div>
+
+<!-- Mobile bottom tabs -->
+<div class="mob-tabs">
+  <button class="mtab on" id="tabC" onclick="mobTab('court')"><span>🎾</span><span>Terrain</span></button>
+  <button class="mtab" id="tabL" onclick="mobTab('list')"><span>📋</span><span>Tactiques</span></button>
+  <button class="mtab" id="tabD" onclick="mobTab('detail')"><span>📖</span><span>Détail</span></button>
+</div>
+
 <script>
-// Court SVG constants (viewBox 300×540)
-const C = {
-  w:300, h:540, ml:22, mr:22, mt:18, mb:18,
-  get cw(){return this.w-this.ml-this.mr},   // 256
-  get ch(){return this.h-this.mt-this.mb},   // 504
-  get netY(){return this.mt+this.ch/2},       // 270
-  // SSL: 1.98m from net, half court 6.7m → 1.98/6.7 * ch/2
-  get ssl(){return (1.98/6.7)*(this.ch/2)},  // ~74.7px
-  // Singles width: 5.18/6.1 of total width
-  get sw(){return this.cw*(5.18/6.1)},       // ~217px
-  get so(){return (this.cw-this.sw)/2},      // ~19.5px
-  get left(){return this.ml+this.so},
-  get right(){return this.ml+this.so+this.sw},
-  get top(){return this.mt},
-  get bot(){return this.mt+this.ch},
-};
+'use strict';
 
-// Convert normalized (0-1, 0=top/opponent back, 1=bottom/player back) to SVG px
-function px(nx, ny){
-  return {x: C.left + nx*C.sw, y: C.top + ny*C.ch};
-}
+/* ═══════════════════════════════════════════
+   COURT GEOMETRY  (viewBox 300 × 540)
+   Court réel : 13.4 m × 6.1 m
+   ═══════════════════════════════════════════ */
+const G = Object.freeze({
+  W:300, H:540,
+  ML:22, MR:22, MT:22, MB:22,
+  get CW(){return this.W-this.ML-this.MR},      // 256 px
+  get CH(){return this.H-this.MT-this.MB},       // 496 px
+  get NY(){return this.MT+this.CH/2},            // net Y = 270
+  get SSL(){return (1.98/6.7)*(this.CH/2)},      // short service line offset ≈ 73.4 px
+  get SW(){return this.CW*(5.18/6.1)},           // singles width ≈ 217.4 px
+  get SO(){return (this.CW-this.SW)/2},          // singles offset ≈ 19.3 px
+  get L(){return this.ML+this.SO},               // left singles line
+  get R(){return this.ML+this.SO+this.SW},       // right singles line
+  get T(){return this.MT},                       // top baseline
+  get B(){return this.MT+this.CH},               // bottom baseline
+  get CX(){return (this.L+this.R)/2},            // center X
+});
 
-const CATS = [
-  {id:'service', label:'Service',    icon:'🎯'},
-  {id:'attaque', label:'Attaque',    icon:'⚡'},
-  {id:'defense', label:'Défense',    icon:'🛡️'},
-  {id:'filet',   label:'Filet',      icon:'🕸️'},
-  {id:'pattern', label:'Patterns',   icon:'♟️'},
-  {id:'deplac',  label:'Déplacement',icon:'👟'},
+/* normalized (0-1) → SVG px */
+function px(nx,ny){return {x:G.L+nx*G.SW, y:G.T+ny*G.CH};}
+/* SVG px → normalized */
+function norm(sx,sy){return {x:(sx-G.L)/G.SW, y:(sy-G.T)/G.CH};}
+function clamp(v,a=0,b=1){return Math.max(a,Math.min(b,v));}
+function normC(sx,sy){return {x:clamp((sx-G.L)/G.SW,.02,.98), y:clamp((sy-G.T)/G.CH,.02,.98)};}
+
+/* ═══════════════════════════════════════════
+   TACTICS DATABASE
+   pos.p = player (you, bottom), pos.o = opponent (top)
+   arrows: f/t = normalized {x,y}, c = color, d = dashed, l = label, z = zone marker
+   ═══════════════════════════════════════════ */
+const DB = {
+/* ─── SIMPLE ─── */
+s:{
+service:[
+  {id:'sv1',level:'D',title:'Service court centré',
+   desc:'Service rasant vers le T du carré de service adverse, juste au-dessus du filet.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.38},c:'#f97316',d:0,l:'Service'}],
+   tips:['Rasez le filet — quelques cm suffisent.','Gardez le volant bas pour forcer un lift défensif.',
+         'Même élan que le flick : restez imprévisible.'],
+   when:'Ouverture standard. Impose votre jeu au filet dès le service.',
+   follow:'Montez immédiatement au filet après la frappe.'},
+  {id:'sv2',level:'D',title:'Service court croisé (revers)',
+   desc:'Service court en diagonale vers le carré de service côté revers adverse.',
+   pos:{p:{x:.42,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.42,y:.8},t:{x:.73,y:.38},c:'#f97316',d:0,l:'Croisé ×'}],
+   tips:['Le volant doit raser le filet en angle.','Force l\'adversaire à jouer du revers, moins naturel.',
+         'Combinez : 2× droit → 1× croisé.'],
+   when:'Quand vous avez identifié un revers faible ou pour varier.',
+   follow:'Préparez un retour filet côté droit ou un lift long.'},
+  {id:'sv3',level:'I',title:'Flick revers (long surprise)',
+   desc:'Service tendu et rapide vers le fond côté revers — surprend l\'adversaire collé au filet.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.82,y:.04},c:'#3b82f6',d:1,l:'Flick ×'}],
+   tips:['Même préparation que le service court — déception maximale.','Le côté revers est le plus difficile à défendre.',
+         'Max 1 sur 5 pour garder l\'effet de surprise.'],
+   when:'L\'adversaire anticipe et monte vers le filet dès votre geste.',
+   follow:'Restez au centre, préparez-vous à un retour de fond.'},
+  {id:'sv4',level:'I',title:'Flick coup droit (long surprise)',
+   desc:'Service flick vers le fond côté coup droit — piège un défenseur qui anticipe le revers.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.18,y:.04},c:'#3b82f6',d:1,l:'Flick →'}],
+   tips:['Même geste que le service court.','Le coup droit long adverse peut générer un dégagé puissant — soyez prêt.',
+         'Efficace contre un droitier qui anticipe le flick revers.'],
+   when:'Adversaire qui anticipe systématiquement le flick côté revers.',
+   follow:'Repositionnez-vous au T.'},
+  {id:'sv5',level:'I',title:'Service long haut (dégagé de service)',
+   desc:'Service long et haut vers le fond — standard en simple pour établir un échange de fond.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.04},c:'#3b82f6',d:1,l:'Long haut'}],
+   tips:['En simple, le service long est la norme.','Visez les coins du fond pour réduire les angles.',
+         'Hauteur suffisante pour vous repositionner confortablement.'],
+   when:'Ouverture classique en simple pour établir l\'échange de fond.',
+   follow:'Restez au T, préparez un retour de fond ou un smash.'},
+  {id:'sv6',level:'A',title:'Drive service (tendu-plat)',
+   desc:'Service tendu et plat au-dessus du filet créant immédiatement une situation de jeu rapide.',
+   pos:{p:{x:.48,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.48,y:.8},t:{x:.52,y:.44},c:'#ef4444',d:0,l:'Drive'}],
+   tips:['Respectez la hauteur réglementaire — illégal si trop bas.','Crée un échange rapide — restez prêt.',
+         'L\'adversaire a très peu d\'options lentes en retour.'],
+   when:'Contre un adversaire passif ou qui anticipe les services hauts.',
+   follow:'Préparez-vous à un échange de drives rapides.'},
+  {id:'sv7',level:'A',title:'Service variable (pattern tactique)',
+   desc:'Enchaîner intelligemment différents services pour désorienter l\'adversaire.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.38},c:'#f97316',d:0,l:'Court'},{f:{x:.5,y:.8},t:{x:.5,y:.04},c:'#3b82f6',d:1,l:'ou Long'}],
+   tips:['Établissez un pattern (3 courts + 1 long) puis brisez-le.','Observez les pieds adverses : anticipation visible ?',
+         'La variation psychologique vaut autant que la technique.'],
+   when:'Dès que vous identifiez les habitudes d\'anticipation adverses.',
+   follow:'Choisissez le service selon la position et la réaction adverse.'},
+],
+
+attaque:[
+  {id:'at1',level:'I',title:'Smash + montée filet',
+   desc:'Smash puissant depuis le fond suivi d\'une montée rapide pour dominer l\'échange.',
+   pos:{p:{x:.5,y:.9},o:{x:.35,y:.15}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.35,y:.3},c:'#ef4444',d:0,l:'Smash'},{f:{x:.5,y:.87},t:{x:.5,y:.65},c:'#f97316',d:1,l:'Monter'}],
+   tips:['Visez les pieds ou le corps adverse — pas les espaces libres.','Ne smashez jamais deux fois au même endroit.',
+         'Montez au filet dès l\'impact pour saisir la réponse.'],
+   when:'Le volant est levé haut depuis le fond de court adverse.',
+   follow:'Kill au filet si il relève, smash croisé si il bloque en ligne.'},
+  {id:'at2',level:'A',title:'Smash croisé finisseur',
+   desc:'Smash en diagonale vers le couloir extérieur depuis le fond latéral — angle indéfendable.',
+   pos:{p:{x:.22,y:.9},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.22,y:.87},t:{x:.9,y:.28},c:'#ef4444',d:0,l:'Smash ×'}],
+   tips:['Depuis le fond gauche : croisez vers le couloir droit adverse.','Déclencheur : 2 smashes en ligne, puis croisé.',
+         'L\'angle crée un espace impossible à couvrir.'],
+   when:'Position de smash fond gauche, adversaire en défense en ligne.',
+   follow:'Il est écarté — s\'il relève, montez finir au filet.'},
+  {id:'at3',level:'I',title:'Amorti surprenant',
+   desc:'Amorti court depuis le fond déguisé en smash — déplace l\'adversaire vers le filet.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.5,y:.39},c:'#f97316',d:0,l:'Amorti'}],
+   tips:['Le volant doit mourir le plus près possible du filet.','Même préparation que le smash — la déception est la clé.',
+         'Accélérez vers le filet dès la frappe.'],
+   when:'Adversaire en fond de court, vous avez du temps et de la hauteur.',
+   follow:'S\'il relève → smash. S\'il joue filet → filet ou dégagé.'},
+  {id:'at4',level:'I',title:'Half-smash (smash cassé)',
+   desc:'Smash à 60% de puissance vers le milieu du terrain — contrôle et placement.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.5,y:.4},c:'#ef4444',d:1,l:'Half-smash'}],
+   tips:['Plus de précision, moins de fatigue que le smash plein.','Idéal pour enchaîner rapidement plusieurs frappes.',
+         'Casse le rythme adverse qui attend la puissance maximale.'],
+   when:'Légèrement hors position ou pour varier le rythme d\'attaque.',
+   follow:'Montez au filet — le half-smash génère souvent un retour mou.'},
+  {id:'at5',level:'I',title:'Smash sur le corps',
+   desc:'Smash directement sur le corps adverse (hanches/épaules) pour bloquer ses options de retour.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.2}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.5,y:.28},c:'#ef4444',d:0,l:'Corps !'}],
+   tips:['Un volant dans le corps est difficile à renvoyer avec puissance.','Casse le timing adverse habitué aux smashes latéraux.',
+         'Très efficace contre les défenseurs qui couvrent bien gauche/droite.'],
+   when:'Contre un défenseur agile qui anticipe bien les côtés.',
+   follow:'La réponse sera souvent un drive ou lift mou — exploitez-le.'},
+  {id:'at6',level:'A',title:'Amorti croisé',
+   desc:'Amorti en diagonale depuis le fond — trajectoire longue et difficile à défendre.',
+   pos:{p:{x:.8,y:.9},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.8,y:.87},t:{x:.1,y:.39},c:'#f97316',d:0,l:'Amorti ×'}],
+   tips:['Le volant doit raser le filet sur toute la diagonale.','L\'adversaire doit couvrir toute la largeur du terrain.',
+         'Enchaîner amorti droit → amorti croisé = adversaire désarticulé.'],
+   when:'Depuis le fond droit, adversaire anticipant l\'amorti en ligne.',
+   follow:'S\'il relève depuis le coin filet gauche, vous smashez.'},
+  {id:'at7',level:'I',title:'Dégagé offensif (clear rapide)',
+   desc:'Dégagé tendu et rapide vers le fond adverse pour le repousser et créer l\'angle.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.5}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.1,y:.04},c:'#3b82f6',d:0,l:'Dégagé ×'}],
+   tips:['Différent du dégagé défensif : tendu et direct, pas haut et lent.','Repousse l\'adversaire loin du filet.',
+         'Visez les coins du fond, pas le centre.'],
+   when:'Pour reprendre l\'initiative en repositionnant l\'adversaire.',
+   follow:'Adversaire en fond → enchaînez amorti ou smash.'},
+  {id:'at8',level:'I',title:'Rafale de smashes variés',
+   desc:'Smasher en rafale en variant les placements pour épuiser la défense.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.2}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.15,y:.3},c:'#ef4444',d:0,l:'① G'},{f:{x:.5,y:.87},t:{x:.85,y:.3},c:'#ef4444',d:0,l:'② D'},{f:{x:.5,y:.87},t:{x:.5,y:.37},c:'#ef4444',d:1,l:'③ Corps'}],
+   tips:['Alternez G / D / corps sans pattern prévisible.','Ne frappez pas à 100% en continu — dosez l\'effort.',
+         'Le 3e coup après G-D est souvent gagnant.'],
+   when:'En situation de domination pour forcer la faute adverse.',
+   follow:'Si la défense tient, variez avec un amorti ou filet.'},
+],
+
+defense:[
+  {id:'df1',level:'D',title:'Dégagé défensif haut',
+   desc:'Renvoi haut et profond vers le fond adverse pour récupérer du temps et se repositionner.',
+   pos:{p:{x:.5,y:.92},o:{x:.5,y:.5}},
+   arrows:[{f:{x:.5,y:.9},t:{x:.5,y:.03},c:'#3b82f6',d:1,l:'Dégagé haut'}],
+   tips:['Aussi haut et aussi profond que possible.','Profitez du vol pour revenir au T central.',
+         'Variez droite/gauche pour déplacer l\'adversaire.'],
+   when:'Sous pression en fond, après un smash ou amorti profond.',
+   follow:'Revenez immédiatement au T pour couvrir le retour.'},
+  {id:'df2',level:'I',title:'Drive contre smash',
+   desc:'Réponse drive plate et rapide sur les côtés pour contrer un smash adverse.',
+   pos:{p:{x:.5,y:.85},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.82},t:{x:.1,y:.55},c:'#22c55e',d:0,l:'Drive ←'},{f:{x:.5,y:.82},t:{x:.9,y:.55},c:'#22c55e',d:1,l:'Drive →'}],
+   tips:['Raquette haute et prête avant l\'impact adverse.','Visez les angles — jamais directement sur lui.',
+         'Le drive plat surprend celui qui attend votre lift.'],
+   when:'Face à un smash prévisible avec le temps de préparer une réponse active.',
+   follow:'Restez bas, la réponse adverse peut être très rapide.'},
+  {id:'df3',level:'A',title:'Bloc filet (renverser l\'échange)',
+   desc:'Bloquer le smash adverse vers le filet pour inverser les rôles attaquant/défenseur.',
+   pos:{p:{x:.5,y:.85},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.82},t:{x:.5,y:.4},c:'#a855f7',d:0,l:'Bloc filet'}],
+   tips:['Mouvement minimal — amortissez juste le volant.','Visez devant le filet côté revers adverse.',
+         'Si bien exécuté : vous devenez attaquant.'],
+   when:'L\'adversaire smash fort et monte au filet.',
+   follow:'S\'il relève depuis le filet → smash immédiat.'},
+  {id:'df4',level:'I',title:'Dégagé croisé défensif',
+   desc:'Dégagé en diagonale pour sortir d\'un coin sous pression et déplacer l\'adversaire.',
+   pos:{p:{x:.85,y:.9},o:{x:.3,y:.5}},
+   arrows:[{f:{x:.85,y:.87},t:{x:.1,y:.04},c:'#3b82f6',d:1,l:'Dégagé ×'}],
+   tips:['Depuis un coin, le croisé oblige l\'adversaire à courir plus loin.','Haut et profond pour maximiser le temps de récupération.',
+         'Revenez au centre pendant le vol du volant.'],
+   when:'En coin gauche ou droit sous pression, adversaire bien centré.',
+   follow:'Recentrez-vous pendant qu\'il court vers son coin.'},
+  {id:'df5',level:'A',title:'Amorti défensif (contresens)',
+   desc:'Retourner un smash avec un amorti court — contredire les anticipations adverses.',
+   pos:{p:{x:.5,y:.85},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.82},t:{x:.5,y:.39},c:'#f97316',d:0,l:'Amorti déf.'}],
+   tips:['Contre-intuitif : l\'adversaire attend un lift ou drive.','Renvoie l\'adversaire vers l\'avant alors qu\'il est au fond.',
+         'Geste délicat — entraînez-le spécifiquement.'],
+   when:'Contre un adversaire qui monte systématiquement après son smash.',
+   follow:'S\'il est piégé au filet, vous dominez depuis le fond.'},
+  {id:'df6',level:'I',title:'Réponse lift croisée',
+   desc:'Lever le volant en diagonale pour déplacer l\'adversaire et récupérer sa position.',
+   pos:{p:{x:.5,y:.9},o:{x:.3,y:.5}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.85,y:.04},c:'#3b82f6',d:0,l:'Lift ×'}],
+   tips:['Le croisé crée un trajet plus long pour l\'adversaire.','Gagnez du temps ET repositionnez votre adversaire.',
+         'Utile quand il est déjà positionné sur votre côté droit.'],
+   when:'Sous pression, adversaire positionné côté droit de votre terrain.',
+   follow:'Récupérez au T pendant qu\'il court vers son coin gauche.'},
+],
+
+filet:[
+  {id:'fi1',level:'I',title:'Coup de filet (tumble net)',
+   desc:'Frappe au filet avec effet de rotation — le volant retombe juste de l\'autre côté.',
+   pos:{p:{x:.5,y:.6},o:{x:.5,y:.4}},
+   arrows:[{f:{x:.5,y:.57},t:{x:.5,y:.43},c:'#f97316',d:0,l:'Filet'}],
+   tips:['Frappez en dessous du filet avec le plat de la raquette.','La rotation naturelle du volant le fait tomber court.',
+         'Finesse > puissance : c\'est un coup de contrôle total.'],
+   when:'L\'adversaire joue court au filet et vous êtes bien positionné.',
+   follow:'Restez au filet : s\'il relève, montez pour finir.'},
+  {id:'fi2',level:'I',title:'Kill au filet',
+   desc:'Frappe sèche et descendante sur un volant trop haut — coup gagnant.',
+   pos:{p:{x:.5,y:.56},o:{x:.5,y:.44}},
+   arrows:[{f:{x:.5,y:.54},t:{x:.5,y:.46},c:'#ef4444',d:0,l:'Kill !'}],
+   tips:['Tentez seulement si le volant dépasse la bande du filet.','Angle diagonal > droiture pour limiter le retour.',
+         'Geste bref et sec — pas besoin de force excessive.'],
+   when:'Le volant est au-dessus du niveau du filet — finissez l\'échange.',
+   follow:'Point direct si bien placé, sinon défense immédiate.'},
+  {id:'fi3',level:'A',title:'Filet croisé (contre-angle)',
+   desc:'Réponse croisée à un filet adverse pour créer un angle inattendu.',
+   pos:{p:{x:.22,y:.62},o:{x:.78,y:.38}},
+   arrows:[{f:{x:.22,y:.6},t:{x:.78,y:.42},c:'#a855f7',d:0,l:'Croisé ×'}],
+   tips:['Uniquement si le coup adverse est mou et contrôlable.','Surprenez avec l\'angle qu\'il ne couvre pas.',
+         'Accompagnez doucement pour maîtriser la trajectoire.'],
+   when:'L\'adversaire joue filet depuis un angle et monte en ligne.',
+   follow:'Il doit courir en diagonale — s\'il relève, vous attaquez.'},
+  {id:'fi4',level:'D',title:'Poussée filet (push)',
+   desc:'Coup plat et bas juste au-dessus du filet pour mettre l\'adversaire sous pression.',
+   pos:{p:{x:.5,y:.59},o:{x:.5,y:.41}},
+   arrows:[{f:{x:.5,y:.57},t:{x:.5,y:.44},c:'#22c55e',d:0,l:'Push'}],
+   tips:['Passez rapidement — peu de temps de réaction adverse.','Différent du kill : plus plat, pas forcément descendant.',
+         'Utile quand le volant est légèrement sous le niveau du filet.'],
+   when:'Le volant est légèrement bas mais vous êtes bien positionné.',
+   follow:'Restez au filet pour l\'échange suivant.'},
+  {id:'fi5',level:'I',title:'Lift trompeur depuis le filet',
+   desc:'Feindre le coup de filet, puis envoyer un dégagé long — adversaire pris au filet.',
+   pos:{p:{x:.5,y:.58},o:{x:.5,y:.42}},
+   arrows:[{f:{x:.5,y:.56},t:{x:.5,y:.04},c:'#3b82f6',d:1,l:'Lift !'}],
+   tips:['Préparation identique au coup de filet — la déception est tout.','L\'adversaire monté au filet est piégé loin du fond.',
+         'Exécutez rapidement pour que la feinte soit crédible.'],
+   when:'L\'adversaire anticipe un coup de filet et monte.',
+   follow:'Il est en fond — vous dominez depuis le centre.'},
+  {id:'fi6',level:'I',title:'Filet revers',
+   desc:'Coup de filet du revers pour les volants côté gauche (droitier).',
+   pos:{p:{x:.2,y:.6},o:{x:.5,y:.4}},
+   arrows:[{f:{x:.2,y:.58},t:{x:.5,y:.42},c:'#f97316',d:0,l:'Filet revers'}],
+   tips:['Le poignet revers souple génère toute la puissance.','Même hauteur de raquette que le filet coup droit.',
+         'Entraînez-le séparément — souvent le point faible des joueurs.'],
+   when:'Le volant arrive côté gauche (droitier) près du filet.',
+   follow:'Restez au filet pour enchaîner ou reculez si nécessaire.'},
+  {id:'fi7',level:'I',title:'Dégagé de récupération depuis le filet',
+   desc:'Relever le volant haut vers le fond depuis le filet pour se repositionner.',
+   pos:{p:{x:.5,y:.58},o:{x:.5,y:.5}},
+   arrows:[{f:{x:.5,y:.56},t:{x:.5,y:.04},c:'#3b82f6',d:0,l:'Dégagé haut'}],
+   tips:['Utilisez quand vous êtes déséquilibré au filet.','Haut et profond pour récupérer un maximum de temps.',
+         'Revenez au T immédiatement après.'],
+   when:'En mauvaise position au filet, impossible de jouer offensif.',
+   follow:'Récupérez au T pendant le vol du volant.'},
+],
+
+pattern:[
+  {id:'pt1',level:'I',title:'Triangle (amorti → lift → smash)',
+   desc:'Enchaînement en 3 temps pour épuiser et déséquilibrer tactiquement l\'adversaire.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.08}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.2,y:.4},c:'#f97316',d:0,l:'① Amorti'},{f:{x:.2,y:.4},t:{x:.8,y:.08},c:'#3b82f6',d:1,l:'② Lift adv.'},{f:{x:.5,y:.85},t:{x:.8,y:.3},c:'#ef4444',d:0,l:'③ Smash'}],
+   tips:['L\'amorti force l\'adversaire à courir vers l\'avant.','Son dégagé de récupération vous donne le smash.',
+         'Smashez du côté opposé à votre amorti pour couvrir plus de distance.'],
+   when:'Contre un adversaire rapide mais prévisible, ou pour l\'épuiser physiquement.',
+   follow:'Répétez en alternant les côtés gauche et droite.'},
+  {id:'pt2',level:'I',title:'Alternance fond-filet',
+   desc:'Alterner dégagé long et amorti court pour déplacer l\'adversaire d\'arrière en avant.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.5}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.5,y:.39},c:'#f97316',d:0,l:'① Amorti'},{f:{x:.5,y:.85},t:{x:.5,y:.04},c:'#3b82f6',d:1,l:'② Dégagé'}],
+   tips:['Avant-arrière = le déplacement le plus épuisant.','Masquez : même élan pour amorti et dégagé.',
+         'Après 3 amortis : dégagé pour surprendre.'],
+   when:'Contre un adversaire puissant mais peu agile, surtout en fin de match.',
+   follow:'Dès qu\'il est en fond (suite au dégagé) → amorti immédiat.'},
+  {id:'pt3',level:'A',title:'Double décalage latéral',
+   desc:'Deux coups dans les coins opposés pour écarter l\'adversaire du centre, puis finisseur.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.08}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.08,y:.25},c:'#f97316',d:0,l:'① G'},{f:{x:.5,y:.85},t:{x:.92,y:.25},c:'#a855f7',d:0,l:'② D'},{f:{x:.5,y:.85},t:{x:.5,y:.4},c:'#22c55e',d:1,l:'③ Centre'}],
+   tips:['Le 3e coup dans le vide central est souvent gagnant.','Les coups ① et ② doivent être précis dans les coins.',
+         'L\'adversaire épuisé et hors centre ne peut plus défendre.'],
+   when:'Contre un adversaire bien centré mais avec une vitesse latérale insuffisante.',
+   follow:'S\'il remonte le ③ → smash depuis votre position idéale.'},
+  {id:'pt4',level:'I',title:'Exploitation du revers',
+   desc:'Attaquer systématiquement le côté revers adverse jusqu\'à créer l\'ouverture côté coup droit.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.8,y:.3},c:'#ef4444',d:0,l:'Revers ①'},{f:{x:.5,y:.85},t:{x:.8,y:.04},c:'#3b82f6',d:1,l:'Revers ②'},{f:{x:.5,y:.85},t:{x:.15,y:.35},c:'#22c55e',d:0,l:'Ouvert. ③'}],
+   tips:['Attaquez le revers 2-3 fois : il se décale.','L\'adversaire sur-compense → espace côté coup droit.',
+         'Le 3e coup côté coup droit est souvent gagnant.'],
+   when:'L\'adversaire a un revers nettement plus faible que son coup droit.',
+   follow:'Dès qu\'il se décale → coup gagnant côté coup droit.'},
+  {id:'pt5',level:'A',title:'Piège au T (trap)',
+   desc:'Forcer l\'adversaire dans un coin puis jouer le T central laissé vide.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.92,y:.3},c:'#ef4444',d:0,l:'① Coin D'},{f:{x:.5,y:.85},t:{x:.5,y:.38},c:'#22c55e',d:0,l:'② T centre'}],
+   tips:['Forcer d\'abord en corner avec un coup puissant.','L\'adversaire doit se déplacer loin du centre.',
+         'Jouez le T central avant même qu\'il revienne.'],
+   when:'Vous avez un coup puissant en corner et l\'adversaire est lent au retour.',
+   follow:'Point souvent gagnant si le timing est parfait.'},
+  {id:'pt6',level:'I',title:'Variation de rythme',
+   desc:'Alterner jeu lent (amortis, dégagés) et jeu rapide (smash, drive) pour briser le timing.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.5,y:.39},c:'#f97316',d:0,l:'Lent: amorti'},{f:{x:.5,y:.85},t:{x:.3,y:.3},c:'#ef4444',d:1,l:'Rapide: smash'}],
+   tips:['Un changement de rythme déstabilise plus qu\'un rythme élevé constant.','Ralentissez pour faire lever l\'adversaire, puis accélérez.',
+         'Le premier coup après un changement est souvent gagnant.'],
+   when:'Contre un adversaire qui a bien pris votre rythme.',
+   follow:'Continuez à varier — jamais deux fois de suite le même rythme.'},
+  {id:'pt7',level:'I',title:'Dégagé-Smash-Amorti',
+   desc:'Enchaînement classique pour varier les frappes et déconcerter la défense.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.5,y:.04},c:'#3b82f6',d:0,l:'① Dégagé'},{f:{x:.5,y:.88},t:{x:.3,y:.3},c:'#ef4444',d:0,l:'② Smash'},{f:{x:.5,y:.88},t:{x:.5,y:.39},c:'#f97316',d:0,l:'③ Amorti'}],
+   tips:['Le dégagé repositionne l\'adversaire en fond.','Le smash crée la pression.','L\'amorti brise le rythme quand il attend le smash.'],
+   when:'Pour varier l\'attaque et éviter de devenir prévisible.',
+   follow:'Répétez dans un ordre différent à chaque fois.'},
+  {id:'pt8',level:'A',title:'Rotation continue (chaos tactique)',
+   desc:'Enchaîner les frappes sans rythme prévisible pour maintenir une pression totale.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.15,y:.35},c:'#ef4444',d:0,l:'A'},{f:{x:.5,y:.85},t:{x:.85,y:.35},c:'#f97316',d:0,l:'B'},{f:{x:.5,y:.85},t:{x:.5,y:.4},c:'#3b82f6',d:1,l:'C'}],
+   tips:['Changez de direction à chaque coup.','Maintenez votre position centrale entre chaque frappe.',
+         'But : que l\'adversaire ne puisse jamais anticiper.'],
+   when:'En phase dominante, pour transformer l\'avantage en point.',
+   follow:'Continuez jusqu\'à l\'erreur adverse ou une ouverture franche.'},
+],
+
+fondcourt:[
+  {id:'fc1',level:'I',title:'Dégagé offensif tendu',
+   desc:'Dégagé tendu et rapide vers le fond adverse pour le repousser loin du filet.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.5}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.15,y:.04},c:'#3b82f6',d:0,l:'Dégagé ×'}],
+   tips:['Tendu et direct ≠ haut et lent (défensif).','Visez les coins du fond pour réduire les angles de réponse.',
+         'Enchaînez avec un amorti ou smash dès qu\'il relève.'],
+   when:'Pour reprendre l\'initiative en repositionnant l\'adversaire.',
+   follow:'Adversaire en fond → enchaînez immédiatement.'},
+  {id:'fc2',level:'D',title:'Dégagé défensif haut',
+   desc:'Dégagé très haut et profond pour récupérer du temps après une situation difficile.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.4}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.5,y:.04},c:'#3b82f6',d:1,l:'Haut et profond'}],
+   tips:['Cherchez la hauteur maximale pour vous donner du temps.','Revenez au T pendant le vol du volant.',
+         'Profond et centré > angulé et court en défense.'],
+   when:'Sous pression au fond du terrain, pas d\'option offensive.',
+   follow:'Récupérez au T pendant le vol.'},
+  {id:'fc3',level:'I',title:'Drive de fond (riposte)',
+   desc:'Drive plat et rapide depuis le fond pour contrer un dégagé adverse pas assez profond.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.87},t:{x:.5,y:.3},c:'#22c55e',d:0,l:'Drive plat'}],
+   tips:['Trajectoire plate = peu de temps de réaction adverse.','Visez les lignes latérales pour créer des angles.',
+         'S\'utilise contre un dégagé pas assez profond.'],
+   when:'L\'adversaire envoie un dégagé pas assez profond ou dans votre coup droit.',
+   follow:'Restez dans l\'échange — préparez le prochain coup.'},
+  {id:'fc4',level:'I',title:'Amorti ligne depuis le fond',
+   desc:'Amorti le long de la ligne depuis le fond côté coup droit.',
+   pos:{p:{x:.8,y:.9},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.8,y:.87},t:{x:.85,y:.39},c:'#f97316',d:0,l:'Amorti ligne'}],
+   tips:['En ligne : trajet le plus court, le plus tranchant.','L\'adversaire doit couvrir toute la longueur du terrain.',
+         'Masquez en adoptant la posture du smash.'],
+   when:'Depuis le fond droit, adversaire centré ou légèrement gauche.',
+   follow:'Montez au filet dès la frappe pour finir l\'échange.'},
+  {id:'fc5',level:'A',title:'Amorti croisé depuis le fond',
+   desc:'Amorti en diagonale depuis le fond — trompeur et très difficile à défendre.',
+   pos:{p:{x:.8,y:.9},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.8,y:.87},t:{x:.1,y:.39},c:'#f97316',d:0,l:'Amorti ×'}],
+   tips:['Trajectoire diagonale = plus longue à couvrir.','Assurez-vous que l\'adversaire ne couvre pas le filet croisé.',
+         'Amorti ligne → amorti croisé = adversaire désarticulé.'],
+   when:'Depuis le fond droit, adversaire anticipant l\'amorti en ligne.',
+   follow:'S\'il est en difficulté au filet côté gauche — finissez.'},
+],
+
+deplac:[
+  {id:'dp1',level:'D',title:'Position T centrale',
+   desc:'Revenir systématiquement au centre de son demi-terrain après chaque frappe.',
+   pos:{p:{x:.5,y:.7},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.7},t:{x:.5,y:.7},c:'#22c55e',d:0,l:'Zone T',z:1}],
+   tips:['Revenez au T après chaque coup, sans exception.','N\'attendez pas que le volant atterrisse pour bouger.',
+         'Depuis le T : max 3-4 pas pour atteindre n\'importe quel coin.'],
+   when:'En permanence — règle de déplacement fondamentale n°1.',
+   follow:'Bonne position au T = moins d\'effort pour chaque coup suivant.'},
+  {id:'dp2',level:'D',title:'Pas chassé vers le fond',
+   desc:'Déplacement efficace vers le fond de court pour préparer smash ou dégagé.',
+   pos:{p:{x:.5,y:.7},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.68},t:{x:.5,y:.9},c:'#94a3b8',d:1,l:'Reculer'}],
+   tips:['Tournez l\'épaule dominante vers l\'arrière dès l\'anticipation.','Commencez à lever la raquette pendant le déplacement.',
+         'Frappez puis faites un grand pas avant pour revenir au T.'],
+   when:'Dès que vous anticipez un dégagé ou lift haut vers votre fond.',
+   follow:'Après la frappe, revenez immédiatement au T.'},
+  {id:'dp3',level:'I',title:'Fente avant au filet',
+   desc:'Fente profonde pour intercepter un amorti court avec le bras bien tendu.',
+   pos:{p:{x:.5,y:.7},o:{x:.5,y:.45}},
+   arrows:[{f:{x:.5,y:.67},t:{x:.5,y:.56},c:'#94a3b8',d:1,l:'Fente'}],
+   tips:['Grand pas de la jambe du côté de la frappe.','Bras tendu, raquette en avant pour maximiser la portée.',
+         'Repoussez immédiatement sur la jambe avant pour revenir.'],
+   when:'Amorti court adverse à intercepter à la hauteur du filet.',
+   follow:'Filet droit, filet croisé ou dégagé de récupération.'},
+  {id:'dp4',level:'A',title:'Ciseaux en saut (scissors kick)',
+   desc:'Saut avec rotation des jambes en l\'air pour smasher depuis le fond et atterrir du pied avant.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.3,y:.3},c:'#ef4444',d:0,l:'Smash en saut'}],
+   tips:['Sautez du pied opposé à votre main dominante.','En l\'air, croisez les jambes pour atterrir du pied avant.',
+         'Permet d\'attaquer depuis le fond ET de monter immédiatement.'],
+   when:'Souhait de smasher depuis le fond et monter immédiatement au filet.',
+   follow:'Atterrissez du pied avant et montez — pas d\'arrêt intermédiaire.'},
+  {id:'dp5',level:'I',title:'Déplacement latéral rapide',
+   desc:'Couvrir les couloirs latéraux avec des pas chassés efficaces et économiques.',
+   pos:{p:{x:.5,y:.7},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.68},t:{x:.05,y:.7},c:'#94a3b8',d:1,l:'← Latéral'},{f:{x:.5,y:.68},t:{x:.95,y:.7},c:'#94a3b8',d:1,l:'Latéral →'}],
+   tips:['2-3 pas chassés suffisent pour la plupart des coups latéraux.','Restez sur les demi-pointes pour réagir plus vite.',
+         'Poussez fort du pied extérieur pour la fente finale.'],
+   when:'Pour atteindre les coups latéraux au fond ou au filet rapidement.',
+   follow:'Revenez au T central immédiatement après chaque coup.'},
+  {id:'dp6',level:'I',title:'Récupération après smash',
+   desc:'Revenir efficacement au T après un smash pour être prêt à défendre ou attaquer.',
+   pos:{p:{x:.5,y:.9},o:{x:.5,y:.4}},
+   arrows:[{f:{x:.5,y:.88},t:{x:.5,y:.68},c:'#f97316',d:0,l:'Récup.'},{f:{x:.5,y:.68},t:{x:.5,y:.68},c:'#22c55e',d:0,l:'T',z:1}],
+   tips:['Grand pas vers l\'avant dès l\'impact du smash.','Coupez le rebond : pas chassé + arrêt au T.',
+         'Regardez l\'adversaire, pas le volant qui part.'],
+   when:'Immédiatement après chaque smash.',
+   follow:'Prêt au T pour tout retour : drive, bloc, lift.'},
+],
+}, // end s:
+
+/* ─── DOUBLE ─── */
+d:{
+service:[
+  {id:'ds1',level:'D',title:'Service court centre (double)',
+   desc:'Service court vers le T central adverse — standard en double, limite les angles de retour.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.36},c:'#f97316',d:0,l:'Court centre'}],
+   tips:['Le T limite les retours croisés puissants.','Serveur monte au filet, partenaire reste en fond.',
+         'Zéro risque — maîtrisez-le parfaitement.'],
+   when:'Ouverture d\'échange standard en double.',
+   follow:'Serveur au filet immédiatement, partenaire couvre le fond.'},
+  {id:'ds2',level:'D',title:'Service court côté revers',
+   desc:'Service court ciblant le revers adverse pour forcer un retour défensif.',
+   pos:{p:{x:.45,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.45,y:.8},t:{x:.72,y:.37},c:'#f97316',d:0,l:'Revers ×'}],
+   tips:['Force un retour du revers souvent moins puissant.','Serveur monte côté revers pour intercepter.',
+         'Variez avec le service centre pour créer l\'incertitude.'],
+   when:'Quand le receveur a un revers moins fort.',
+   follow:'Préparez le kill au filet côté revers.'},
+  {id:'ds3',level:'I',title:'Flick revers profond (double)',
+   desc:'Service flick vers le fond côté revers pour surprendre un adversaire trop avancé.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.85,y:.04},c:'#3b82f6',d:1,l:'Flick revers'}],
+   tips:['Même préparation que le service court — déception maximale.','En double, le service long est risqué — utilisez rarement.',
+         'Partenaire en fond prêt à smasher le dégagé de retour.'],
+   when:'Le receveur anticipe et monte vers le filet dès votre geste.',
+   follow:'Partenaire en fond prêt au smash.'},
+  {id:'ds4',level:'A',title:'Drive service tendu (double)',
+   desc:'Service tendu et plat pour créer immédiatement une situation de jeu rapide.',
+   pos:{p:{x:.48,y:.82},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.48,y:.8},t:{x:.52,y:.43},c:'#ef4444',d:0,l:'Drive'}],
+   tips:['Crée un échange rapide — formation attaque immédiate.','Prévenez votre partenaire : "drive !" pour qu\'il se prépare.',
+         'Risqué : bonne exécution requise.'],
+   when:'Pour briser le rythme ou contre un adversaire passif.',
+   follow:'Transition immédiate en formation avant-arrière.'},
+],
+attaque:[
+  {id:'da1',level:'I',title:'Formation avant-arrière + smash',
+   desc:'Formation offensive : un joueur au filet, l\'autre en fond qui smash.',
+   pos:{p:{x:.5,y:.7},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.88},t:{x:.3,y:.28},c:'#ef4444',d:0,l:'Smash'},{f:{x:.5,y:.7},t:{x:.5,y:.7},c:'#f97316',d:0,l:'Filet',z:1},{f:{x:.5,y:.88},t:{x:.5,y:.88},c:'#22c55e',d:0,l:'Fond',z:1}],
+   tips:['Joueur arrière smash, joueur avant kill.','Alternez les rôles par rotation après chaque coup.',
+         'Communication : "à toi" / "à moi".'],
+   when:'Vous levez un volant haut — transition en formation attaque.',
+   follow:'Si l\'adversaire drive en couloir → rotation côte à côte.'},
+  {id:'da2',level:'I',title:'Smash sur le corps (confusion)',
+   desc:'Smasher entre les deux adversaires pour créer la confusion sur qui répond.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.2}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.5,y:.32},c:'#ef4444',d:0,l:'Corps / Centre'}],
+   tips:['Visez l\'espace central entre les deux adversaires.','Crée la confusion : "à toi !" / "à moi !"',
+         'Efficace contre une défense côte à côte trop large.'],
+   when:'Les adversaires sont en formation côte à côte avec un grand espace central.',
+   follow:'Suivez avec un kill au filet sur la réponse souvent défensive.'},
+  {id:'da3',level:'A',title:'Alternance smash G/D',
+   desc:'Varier le placement des smashes pour épuiser les défenseurs et créer l\'ouverture.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.2}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.1,y:.3},c:'#ef4444',d:0,l:'G'},{f:{x:.5,y:.85},t:{x:.9,y:.3},c:'#ef4444',d:0,l:'D'},{f:{x:.5,y:.85},t:{x:.5,y:.35},c:'#ef4444',d:1,l:'Corps'}],
+   tips:['Ne smashez jamais 2 fois au même endroit.','3e smash : sur le corps ou en amorti.',
+         'Le joueur de filet anticipe côté du smash.'],
+   when:'En situation de domination pour forcer la faute ou créer l\'ouverture.',
+   follow:'Un défenseur hors position → kill filet côté opposé.'},
+  {id:'da4',level:'A',title:'Rotation d\'attaque (follow)',
+   desc:'Le smasheur monte au filet, le fileteur recule — rotation pour maintenir la pression.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.3,y:.28},c:'#ef4444',d:0,l:'Smash'},{f:{x:.5,y:.85},t:{x:.5,y:.65},c:'#f97316',d:1,l:'Monte'},{f:{x:.5,y:.65},t:{x:.5,y:.88},c:'#94a3b8',d:1,l:'Recule'}],
+   tips:['Rotation fluide = pression constante.','Communication : "je monte" dès le smash.',
+         'Ne jamais être tous les deux en fond simultanément.'],
+   when:'En phase d\'attaque soutenue pour maintenir la pression.',
+   follow:'Répétez jusqu\'à forcer la faute.'},
+],
+defense:[
+  {id:'dd1',level:'D',title:'Formation côte à côte',
+   desc:'Position défensive standard : chaque joueur couvre sa moitié du terrain.',
+   pos:{p:{x:.35,y:.8},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.35,y:.8},t:{x:.35,y:.8},c:'#3b82f6',d:0,l:'G',z:1},{f:{x:.65,y:.8},t:{x:.65,y:.8},c:'#22c55e',d:0,l:'D',z:1}],
+   tips:['Chacun est responsable de son couloir.','Appelez les coups centraux — évitez les collisions.',
+         'Transition vers avant-arrière dès que vous contre-attaquez.'],
+   when:'Adversaires en formation attaque, vous êtes en défense.',
+   follow:'Dès un drive/bloc réussi : transition en avant-arrière.'},
+  {id:'dd2',level:'I',title:'Drive défensif latéral',
+   desc:'Drive latéral rapide pour contrer le smash adverse et créer la transition offensive.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.1,y:.55},c:'#22c55e',d:0,l:'Drive ←'},{f:{x:.5,y:.8},t:{x:.9,y:.55},c:'#22c55e',d:1,l:'Drive →'}],
+   tips:['Visez les couloirs — difficiles pour le fileteur adverse.','Drive plat > lift : vous gardez la pression.',
+         'Si bien placé : le fileteur adverse ne peut pas intercepter.'],
+   when:'Smash adverse prévisible, temps de préparer un drive croisé.',
+   follow:'Si le drive passe → transition en avant-arrière.'},
+  {id:'dd3',level:'A',title:'Bloc court + rotation',
+   desc:'Bloquer le smash vers le filet puis effectuer une rotation pour prendre l\'avantage.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.4},c:'#a855f7',d:0,l:'Bloc'},{f:{x:.5,y:.8},t:{x:.5,y:.65},c:'#f97316',d:1,l:'Rotation'}],
+   tips:['Bloc court sur le revers adverse.','Le joueur qui bloque monte au filet.',
+         'Partenaire reste en fond pour couvrir le lift.'],
+   when:'Contre un attaquant qui monte systématiquement après son smash.',
+   follow:'Formation inversée : vous êtes maintenant en attaque.'},
+  {id:'dd4',level:'I',title:'Lift défensif croisé',
+   desc:'Lever le volant haut en diagonale pour déplacer les adversaires et récupérer.',
+   pos:{p:{x:.5,y:.85},o:{x:.5,y:.1}},
+   arrows:[{f:{x:.5,y:.82},t:{x:.15,y:.04},c:'#3b82f6',d:1,l:'Lift ×'}],
+   tips:['La diagonale oblige les adversaires à courir plus loin.','Haut et profond pour maximiser le temps de récupération.',
+         'Reconstruction de votre formation pendant le vol.'],
+   when:'Sous pression totale, tous les couloirs couverts par les adversaires.',
+   follow:'Reconstruction côte à côte pendant le vol du volant.'},
+],
+filet:[
+  {id:'df1',level:'I',title:'Kill au filet (double)',
+   desc:'Le fileteur tue le volant trop haut — coup décisif en double.',
+   pos:{p:{x:.5,y:.58},o:{x:.5,y:.42}},
+   arrows:[{f:{x:.5,y:.56},t:{x:.5,y:.46},c:'#ef4444',d:0,l:'Kill !'}],
+   tips:['Action bras sèche — pas de grand mouvement.','Visez les pieds ou l\'espace central adverse.',
+         'Kill possible uniquement si le volant dépasse le filet.'],
+   when:'Volant adverse trop haut au filet — finissez l\'échange.',
+   follow:'Point direct ou réponse défensive à gérer.'},
+  {id:'df2',level:'I',title:'Duel au filet (double)',
+   desc:'Enchaînement de coups courts au filet entre les fileteurs des deux équipes.',
+   pos:{p:{x:.5,y:.6},o:{x:.5,y:.4}},
+   arrows:[{f:{x:.5,y:.58},t:{x:.5,y:.43},c:'#f97316',d:0,l:'Filet'},{f:{x:.5,y:.43},t:{x:.5,y:.58},c:'#f97316',d:1,l:'Retour'}],
+   tips:['Le gagnant est celui qui lève ou tue en premier.','Déplacement minimal — économisez l\'énergie.',
+         'Communiquez avec votre partenaire pour couvrir les ouvertures.'],
+   when:'Échange de coups courts au filet entre les deux fileteurs.',
+   follow:'Ne levez pas sauf si vraiment nécessaire — restez dans l\'échange.'},
+  {id:'df3',level:'A',title:'Cross net tendu (double)',
+   desc:'Filet croisé rapide pour créer un angle impossible à couvrir.',
+   pos:{p:{x:.2,y:.62},o:{x:.8,y:.38}},
+   arrows:[{f:{x:.2,y:.6},t:{x:.8,y:.42},c:'#a855f7',d:0,l:'Cross net'}],
+   tips:['Impulsion du poignet uniquement — geste minimal.','Le fileteur adverse doit couvrir une grande distance.',
+         'N\'utilisez qu\'en position de contrôle — risqué sinon.'],
+   when:'Vous dominez l\'échange au filet, l\'adversaire est en retard.',
+   follow:'Point direct ou lift de récupération à smasher.'},
+  {id:'df4',level:'I',title:'Push central (confusion double)',
+   desc:'Poussée filet vers le centre adverse pour créer la confusion entre les deux adversaires.',
+   pos:{p:{x:.5,y:.59},o:{x:.5,y:.41}},
+   arrows:[{f:{x:.5,y:.57},t:{x:.5,y:.43},c:'#22c55e',d:0,l:'Push centre'}],
+   tips:['Le centre en double est souvent mal couvert.','Crée la même confusion que le smash sur le corps.',
+         'Coup rapide et sûr quand le volant n\'est pas assez haut pour killer.'],
+   when:'Volant légèrement bas au filet, espace central adverse mal défendu.',
+   follow:'Restez au filet pour l\'échange suivant.'},
+],
+pattern:[
+  {id:'dp1',level:'A',title:'3e coup smash (setup)',
+   desc:'Service court → retour prévisible → smash puissant sur le 3e coup.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.38},c:'#f97316',d:0,l:'① Service'},{f:{x:.5,y:.38},t:{x:.5,y:.82},c:'#3b82f6',d:1,l:'② Retour'},{f:{x:.5,y:.82},t:{x:.3,y:.22},c:'#ef4444',d:0,l:'③ Smash'}],
+   tips:['Service court → vous anticipez le lift → smashez.','Le 3e coup est planifié, pas improvisé.',
+         'Placez-vous avant que le 2e coup arrive.'],
+   when:'Bon service court forçant un lift prévisible.',
+   follow:'Kill filet de votre partenaire si le smash est défendu.'},
+  {id:'dp2',level:'I',title:'Transition défense → attaque',
+   desc:'Passer de la formation côte à côte à avant-arrière après un drive réussi.',
+   pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.55},c:'#22c55e',d:0,l:'Drive'},{f:{x:.5,y:.8},t:{x:.5,y:.65},c:'#f97316',d:1,l:'Transition'}],
+   tips:['Dès que votre drive passe : le joueur qui l\'a joué monte.','L\'autre reste en fond prêt à smasher.',
+         'La transition doit être instantanée.'],
+   when:'Après un drive ou bloc réussi qui met l\'adversaire en difficulté.',
+   follow:'Formation avant-arrière : dominez jusqu\'au point.'},
+  {id:'dp3',level:'I',title:'Pression continue (double)',
+   desc:'Maintenir la pression par des smashes variés jusqu\'à l\'erreur adverse.',
+   pos:{p:{x:.5,y:.88},o:{x:.5,y:.2}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.1,y:.3},c:'#ef4444',d:0,l:'A'},{f:{x:.5,y:.85},t:{x:.9,y:.3},c:'#a855f7',d:0,l:'B'},{f:{x:.5,y:.85},t:{x:.5,y:.35},c:'#22c55e',d:0,l:'C'}],
+   tips:['Variez : G, D, corps, croisé.','Alternez puissance : plein / half-smash.',
+         'Le fileteur intercepte toute réponse montante.'],
+   when:'En phase d\'attaque établie, adversaires en défense.',
+   follow:'Continuez jusqu\'à l\'erreur adverse.'},
+  {id:'dp4',level:'A',title:'Isoler le joueur faible',
+   desc:'Cibler systématiquement le joueur adverse le moins fort pour créer l\'usure.',
+   pos:{p:{x:.5,y:.88},o:{x:.35,y:.2}},
+   arrows:[{f:{x:.5,y:.85},t:{x:.15,y:.3},c:'#ef4444',d:0,l:'Smash L'},{f:{x:.5,y:.85},t:{x:.2,y:.38},c:'#f97316',d:0,l:'Amorti L'},{f:{x:.5,y:.85},t:{x:.2,y:.04},c:'#3b82f6',d:1,l:'Lift L'}],
+   tips:['Identifiez le joueur faible dès le début du match.','Tout diriger vers lui jusqu\'à épuisement ou erreur.',
+         'Son partenaire couvrira → créant des trous côté fort.'],
+   when:'Disparité de niveau évidente dans la paire adverse.',
+   follow:'Le joueur fort se découvrira → exploitez les espaces.'},
+],
+deplac:[
+  {id:'ddp1',level:'D',title:'Formation avant-arrière',
+   desc:'Position offensive : un au filet, un en fond.',
+   pos:{p:{x:.5,y:.65},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.65},t:{x:.5,y:.65},c:'#f97316',d:0,l:'Filet',z:1},{f:{x:.5,y:.88},t:{x:.5,y:.88},c:'#22c55e',d:0,l:'Fond',z:1}],
+   tips:['Filet : actif, tuez tout ce qui est trop haut.','Fond : smashez fort et varié.',
+         'Rotation si l\'adversaire drive en couloir.'],
+   when:'En phase d\'attaque — le volant adverse est prévisible.',
+   follow:'Maintenez la pression jusqu\'au point ou à la rotation.'},
+  {id:'ddp2',level:'D',title:'Formation côte à côte',
+   desc:'Position défensive : chaque joueur couvre une moitié du terrain.',
+   pos:{p:{x:.35,y:.8},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.35,y:.8},t:{x:.35,y:.8},c:'#3b82f6',d:0,l:'G',z:1},{f:{x:.65,y:.8},t:{x:.65,y:.8},c:'#22c55e',d:0,l:'D',z:1}],
+   tips:['Chacun couvre son couloir, pas de chevauchement.','Appelez les coups centraux.',
+         'Objectif : forcer l\'erreur adverse puis contre-attaquer.'],
+   when:'En situation défensive, adversaires en attaque.',
+   follow:'Dès un bloc/drive réussi → transition en avant-arrière.'},
+  {id:'ddp3',level:'A',title:'Rotation d\'urgence',
+   desc:'Rotation rapide quand le schéma change brutalement.',
+   pos:{p:{x:.5,y:.7},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.5,y:.68},t:{x:.5,y:.85},c:'#94a3b8',d:1,l:'Recule'},{f:{x:.5,y:.85},t:{x:.5,y:.65},c:'#f97316',d:1,l:'Monte'}],
+   tips:['Rotation en 1-2 pas maximum.','Communication verbale = aucune hésitation.',
+         'Entraînez les rotations à l\'échauffement.'],
+   when:'Drive adverse qui traverse, ou smash depuis un mauvais angle.',
+   follow:'Nouvelle formation adaptée à la situation.'},
+  {id:'ddp4',level:'I',title:'Couverture du partenaire',
+   desc:'Anticiper et couvrir les zones laissées libres par le déplacement du partenaire.',
+   pos:{p:{x:.35,y:.8},o:{x:.5,y:.15}},
+   arrows:[{f:{x:.35,y:.78},t:{x:.65,y:.78},c:'#f97316',d:1,l:'Couverture'}],
+   tips:['Si votre partenaire va gauche, couvrez le droit.','Anticipez ses déplacements — pas seulement le volant.',
+         'Un regard ou un mot suffit.'],
+   when:'En permanence : vos deux zones doivent être couvertes sans chevauchement.',
+   follow:'La cohésion des deux joueurs est la clé du double.'},
+],
+}, // end d:
+}; // end DB
+
+/* ═══════════════════════════════════════════
+   CATEGORIES CONFIG
+   ═══════════════════════════════════════════ */
+const CATS=[
+  {id:'service',  label:'Service',    ic:'🎯'},
+  {id:'attaque',  label:'Attaque',    ic:'⚡'},
+  {id:'defense',  label:'Défense',    ic:'🛡️'},
+  {id:'filet',    label:'Filet',      ic:'🕸️'},
+  {id:'pattern',  label:'Patterns',   ic:'♟️'},
+  {id:'fondcourt',label:'Fond court', ic:'🏹',so:true},
+  {id:'deplac',   label:'Déplacements',ic:'👟'},
 ];
 
-const DB = {
-singles: {
-  service:[
-    {id:'s1',title:'Service court centré',level:'D',
-     desc:'Service court et plat vers le centre du carré de service adverse, juste au-dessus du filet.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.38},c:'#f97316',dash:false,lbl:'Service'}],
-     tips:['Rasez le filet — 2cm au-dessus suffit.','Gardez le coq bas pour forcer un lift ou une réponse défensive.','Même geste que le flick pour rester imprévisible.'],
-     when:'Ouverture d\'échange depuis le service, pour imposer votre jeu au filet d\'emblée.',
-     follow:'Avancez immédiatement au filet après le service.'},
-    {id:'s2',title:'Flick service (long rapide)',level:'I',
-     desc:'Service rapide et tendu vers le fond du terrain adverse pour surprendre un adversaire qui anticipe le court.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.03},c:'#3b82f6',dash:true,lbl:'Flick'}],
-     tips:['Même préparation que le service court jusqu\'au dernier instant.','Visez le coin revers — souvent le plus difficile à gérer.','À utiliser 1 fois sur 5 max pour garder la surprise.'],
-     when:'Quand l\'adversaire anticipe et monte vers le filet dès votre service.',
-     follow:'Restez au centre, préparez-vous à un retour de fond.'},
-    {id:'s3',title:'Service court croisé',level:'A',
-     desc:'Service court vers le carré revers adverse, créant un angle difficile à exploiter pour l\'adversaire.',
-     pos:{p:{x:.42,y:.82},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.42,y:.8},t:{x:.72,y:.38},c:'#a855f7',dash:false,lbl:'Croisé'}],
-     tips:['Angle précis : le coq doit raser le coin du filet.','Force l\'adversaire à jouer du revers, moins naturel.','Combinez : 2× droit, 1× croisé pour créer le doute.'],
-     when:'Quand vous avez identifié un revers faible, ou pour varier après 2 services droits.',
-     follow:'Préparez une réponse en filet côté droit ou un lift long.'},
-  ],
-  attaque:[
-    {id:'a1',title:'Smash + montée filet',level:'I',
-     desc:'Smash puissant depuis le fond de court suivi d\'une montée rapide pour dominer l\'échange.',
-     pos:{p:{x:.5,y:.9},o:{x:.35,y:.15}},
-     arrows:[{f:{x:.5,y:.87},t:{x:.35,y:.3},c:'#ef4444',dash:false,lbl:'Smash'},{f:{x:.5,y:.87},t:{x:.5,y:.65},c:'#f97316',dash:true,lbl:'Avancer'}],
-     tips:['Smashez vers les pieds ou le corps — pas dans les espaces.','Ne smashez jamais deux fois au même endroit.','Montez au filet dès l\'impact pour saisir la réponse.'],
-     when:'Quand l\'adversaire lève le coq haut depuis son fond de court.',
-     follow:'Kill au filet si il lève à nouveau, smash croisé si il bloque en ligne.'},
-    {id:'a2',title:'Amorti surprenant',level:'I',
-     desc:'Amorti court depuis le fond déguisé en smash pour déplacer l\'adversaire vers le filet.',
-     pos:{p:{x:.5,y:.9},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.87},t:{x:.5,y:.39},c:'#f97316',dash:false,lbl:'Amorti'}],
-     tips:['Le coq doit mourir le plus près possible du filet.','Même préparation que le smash — la déception est clé.','Accélérez vers le filet dès la frappe.'],
-     when:'Adversaire en fond de court, vous avez du temps et de la hauteur.',
-     follow:'Si il lève → smash. S\'il joue filet → filet droit ou lift.'},
-    {id:'a3',title:'Smash croisé (finisseur)',level:'A',
-     desc:'Smash en diagonale vers le couloir extérieur adverse, quasiment indéfendable.',
-     pos:{p:{x:.25,y:.9},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.25,y:.87},t:{x:.88,y:.28},c:'#ef4444',dash:false,lbl:'Smash ×'}],
-     tips:['Depuis votre fond gauche, croisez vers le couloir droit adverse.','Déclencheur : 2 smashes en ligne, puis croisé.','L\'angle crée un espace impossible à couvrir.'],
-     when:'En position de smash décalé côté gauche, l\'adversaire défend en ligne.',
-     follow:'Il est écarté — s\'il lève, montez finir au filet.'},
-  ],
-  defense:[
-    {id:'d1',title:'Lift défensif haut',level:'D',
-     desc:'Renvoi haut et long vers le fond adverse pour se repositionner après avoir subi.',
-     pos:{p:{x:.5,y:.92},o:{x:.5,y:.5}},
-     arrows:[{f:{x:.5,y:.9},t:{x:.5,y:.03},c:'#3b82f6',dash:true,lbl:'Lift haut'}],
-     tips:['Aussi haut et aussi loin que possible.','Profitez du temps de vol pour revenir au centre.','Variez droite/gauche pour déplacer l\'adversaire.'],
-     when:'Sous pression en fond de court, après un smash ou un amorti profond.',
-     follow:'Revenez immédiatement au T central pour couvrir le retour.'},
-    {id:'d2',title:'Drive contre smash',level:'I',
-     desc:'Réponse rapide et plate (drive) sur les côtés pour contrer un smash adverse.',
-     pos:{p:{x:.5,y:.85},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.82},t:{x:.12,y:.55},c:'#22c55e',dash:false,lbl:'Drive ←'},{f:{x:.5,y:.82},t:{x:.88,y:.55},c:'#22c55e',dash:true,lbl:'Drive →'}],
-     tips:['Raquette haute et prête avant l\'impact adverse.','Visez les angles — jamais directement sur lui.','Le drive plat surprend celui qui attend votre lift.'],
-     when:'Face à un smash prévisible, avec le temps de préparer une réponse active.',
-     follow:'Restez bas, la réponse adverse peut être très rapide.'},
-    {id:'d3',title:'Bloc filet (retourner l\'échange)',level:'A',
-     desc:'Bloquer le smash adverse vers le filet pour le forcer à lever et inverser les rôles.',
-     pos:{p:{x:.5,y:.85},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.82},t:{x:.5,y:.4},c:'#a855f7',dash:false,lbl:'Bloc filet'}],
-     tips:['Mouvement minimal — amortissez juste le volant.','Visez devant le filet, côté revers adverse.','Si bien fait : vous devenez attaquant.'],
-     when:'Quand l\'adversaire smash fort et monte au filet — le bloquer court le ramène en mauvaise position.',
-     follow:'S\'il lève depuis le filet → smash immédiat.'},
-  ],
-  filet:[
-    {id:'f1',title:'Filet droit (tumble)',level:'I',
-     desc:'Coup de filet avec rotation du volant pour qu\'il tombe juste de l\'autre côté.',
-     pos:{p:{x:.5,y:.6},o:{x:.5,y:.4}},
-     arrows:[{f:{x:.5,y:.57},t:{x:.5,y:.43},c:'#f97316',dash:false,lbl:'Filet'}],
-     tips:['Frappez en dessous du filet, plat de raquette.','La rotation naturelle fait tomber le coq court.','Finesse > puissance : coup de contrôle.'],
-     when:'L\'adversaire joue court et vous êtes bien positionné près du filet.',
-     follow:'Restez au filet : s\'il lève, montez pour finir.'},
-    {id:'f2',title:'Kill au filet',level:'I',
-     desc:'Frappe sèche et descendante sur un coq trop haut au filet — coup gagnant.',
-     pos:{p:{x:.5,y:.56},o:{x:.5,y:.44}},
-     arrows:[{f:{x:.5,y:.54},t:{x:.5,y:.46},c:'#ef4444',dash:false,lbl:'Kill !'}],
-     tips:['Tentez seulement si le coq dépasse le filet.','Angle diagonal > ligne droite.','Geste bref et sec — pas besoin de force.'],
-     when:'Le coq est au-dessus de la bande du filet — opportunité de finir l\'échange.',
-     follow:'Point gagnant si bien placé, sinon défense immédiate.'},
-    {id:'f3',title:'Filet croisé (contre)',level:'A',
-     desc:'Réponse croisée à un filet adverse pour créer un angle inattendu.',
-     pos:{p:{x:.22,y:.62},o:{x:.78,y:.38}},
-     arrows:[{f:{x:.22,y:.6},t:{x:.78,y:.42},c:'#a855f7',dash:false,lbl:'Croisé'}],
-     tips:['Uniquement si le coup adverse est mou.','Surprenez avec l\'angle qu\'il ne couvre pas.','Accompagnez doucement pour contrôler.'],
-     when:'L\'adversaire joue filet depuis un angle et monte en ligne — croisez pour contrer.',
-     follow:'Il doit courir en diagonale — s\'il lève, vous attaquez.'},
-  ],
-  pattern:[
-    {id:'p1',title:'Triangle (amorti → lift → smash)',level:'I',
-     desc:'Enchaînement en 3 temps pour épuiser et déséquilibrer l\'adversaire tactiquement.',
-     pos:{p:{x:.5,y:.88},o:{x:.5,y:.08}},
-     arrows:[{f:{x:.5,y:.85},t:{x:.2,y:.4},c:'#f97316',dash:false,lbl:'① Amorti'},{f:{x:.2,y:.4},t:{x:.8,y:.08},c:'#3b82f6',dash:true,lbl:'② Lift (adv.)'},{f:{x:.5,y:.85},t:{x:.8,y:.3},c:'#ef4444',dash:false,lbl:'③ Smash'}],
-     tips:['Amorti → adversaire court en avant.','Son lift de récupération → votre smash.','Smashez du côté opposé à votre amorti.'],
-     when:'Contre un adversaire rapide mais prévisible, ou pour l\'épuiser physiquement.',
-     follow:'Répétez en alternant les côtés gauche/droite.'},
-    {id:'p2',title:'Alternance fond-filet',level:'I',
-     desc:'Alterner clear long et amorti court pour déplacer l\'adversaire d\'arrière en avant en continu.',
-     pos:{p:{x:.5,y:.88},o:{x:.5,y:.5}},
-     arrows:[{f:{x:.5,y:.85},t:{x:.5,y:.38},c:'#f97316',dash:false,lbl:'① Amorti'},{f:{x:.5,y:.85},t:{x:.5,y:.04},c:'#3b82f6',dash:true,lbl:'② Clear'}],
-     tips:['Avant-arrière = le déplacement le plus épuisant.','Masquez : même élan pour amorti et clear.','3 amortis puis 1 clear pour surprendre.'],
-     when:'Contre un adversaire puissant mais moins agile, surtout en fin de match.',
-     follow:'Dès qu\'il est en fond (suite au clear) → amorti immédiat.'},
-    {id:'p3',title:'Double décalage latéral',level:'A',
-     desc:'Deux coups dans les coins opposés pour isoler l\'adversaire du centre, puis finisseur central.',
-     pos:{p:{x:.5,y:.88},o:{x:.5,y:.08}},
-     arrows:[{f:{x:.5,y:.85},t:{x:.08,y:.25},c:'#f97316',dash:false,lbl:'① Coin G'},{f:{x:.5,y:.85},t:{x:.92,y:.25},c:'#a855f7',dash:false,lbl:'② Coin D'},{f:{x:.5,y:.85},t:{x:.5,y:.4},c:'#22c55e',dash:true,lbl:'③ Centre'}],
-     tips:['Le 3e coup dans le vide est souvent gagnant.','Coups ① et ② doivent être précis dans les coins.','L\'adversaire est épuisé et hors centre.'],
-     when:'Contre un adversaire bien centré mais avec vitesse latérale insuffisante.',
-     follow:'S\'il remonte le ③ → smash immédiat depuis votre position idéale.'},
-  ],
-  deplac:[
-    {id:'dep1',title:'Le T central',level:'D',
-     desc:'Toujours revenir au centre de votre terrain après chaque frappe — règle n°1.',
-     pos:{p:{x:.5,y:.7},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.7},t:{x:.5,y:.7},c:'#22c55e',dash:false,lbl:'Zone T',zone:true}],
-     tips:['Revenez au T après chaque coup, sans exception.','Ne regardez pas le volant en vol — anticipez la zone.','Depuis le T, max 3-4 pas pour atteindre n\'importe quel coin.'],
-     when:'En permanence — c\'est la règle de déplacement fondamentale.',
-     follow:'Bonne position au T = moins d\'effort pour chaque coup suivant.'},
-    {id:'dep2',title:'Pas chassé vers le fond',level:'D',
-     desc:'Déplacement efficace vers le fond de court pour préparer un smash ou clear.',
-     pos:{p:{x:.5,y:.7},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.68},t:{x:.5,y:.9},c:'#94a3b8',dash:true,lbl:'Reculer'}],
-     tips:['Tournez l\'épaule dominante vers l\'arrière.','Commencez à lever la raquette pendant le déplacement.','Frappez puis grand pas vers l\'avant pour revenir.'],
-     when:'Dès que vous anticipez un clear ou lift haut vers votre fond.',
-     follow:'Après la frappe (smash/clear), revenez immédiatement au T.'},
-    {id:'dep3',title:'Fente avant au filet',level:'I',
-     desc:'Fente profonde pour intercepter un amorti court avec le bras bien tendu.',
-     pos:{p:{x:.5,y:.7},o:{x:.5,y:.45}},
-     arrows:[{f:{x:.5,y:.67},t:{x:.5,y:.56},c:'#94a3b8',dash:true,lbl:'Fente'}],
-     tips:['Grand pas de la jambe du côté de la frappe.','Bras tendu, raquette en avant pour maximiser la portée.','Repoussez immédiatement sur la jambe avant pour revenir.'],
-     when:'Amorti court adverse que vous devez intercepter à la hauteur du filet.',
-     follow:'Options depuis la fente : filet droit, filet croisé ou lift de récup.'},
-  ],
-},
-doubles: {
-  service:[
-    {id:'ds1',title:'Service court centre (double)',level:'D',
-     desc:'Service court vers le T central adverse pour limiter les angles de réponse.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.36},c:'#f97316',dash:false,lbl:'Service'}],
-     tips:['En double, le carré de service est plus court — adaptez.','Le centre limite le cross-court adverse.','Serveur monte au filet, partenaire reste en fond.'],
-     when:'Ouverture d\'échange standard en double. Sécurité et contrôle.',
-     follow:'Serveur au filet immédiatement, partenaire couvre le fond.'},
-    {id:'ds2',title:'Flick revers adverse (double)',level:'I',
-     desc:'Service flick vers le coin revers en fond pour surprendre et forcer un renvoi faible.',
-     pos:{p:{x:.5,y:.82},o:{x:.7,y:.1}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.85,y:.03},c:'#3b82f6',dash:true,lbl:'Flick revers'}],
-     tips:['Coin revers = angle le plus difficile en double aussi.','Déclencheur : après 3-4 services courts.','Force un clear long = opportunité d\'attaque.'],
-     when:'Quand le receveur anticipe le court et colle le filet.',
-     follow:'Partenaire en fond prêt à smasher le clear de retour.'},
-    {id:'ds3',title:'Service long dosé (double)',level:'I',
-     desc:'Service long et haut vers le fond, pour briser le rythme en double.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.1}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.04},c:'#22c55e',dash:true,lbl:'Long haut'}],
-     tips:['En double, le service long est risqué — à utiliser avec parcimonie.','Visez les coins pour réduire l\'angle de smash adverse.','Formation : montez en attaque ensuite.'],
-     when:'En situation de surprise, l\'adversaire dominant le filet systématiquement.',
-     follow:'Préparez-vous à défendre un smash puissant.'},
-  ],
-  attaque:[
-    {id:'da1',title:'Formation attaque (avant-arrière)',level:'I',
-     desc:'Formation offensive : un joueur au filet, l\'autre en fond pour smasher.',
-     pos:{p:{x:.5,y:.7},o:{x:.5,y:.35}},
-     arrows:[{f:{x:.5,y:.88},t:{x:.3,y:.28},c:'#ef4444',dash:false,lbl:'Smash'},{f:{x:.5,y:.7},t:{x:.5,y:.7},c:'#22c55e',dash:false,lbl:'Filet',zone:true}],
-     tips:['Joueur arrière smash, joueur avant tue au filet.','Alternez les rôles si le schéma change.','Communication essentielle : "à toi" / "à moi".'],
-     when:'Quand vous levez un coq haut — transition en formation attaque.',
-     follow:'Si l\'adversaire défend en drive → rotation côte à côte.'},
-    {id:'da2',title:'Smash sur le corps (double)',level:'I',
-     desc:'Smasher sur le corps de l\'adversaire pour créer de la confusion entre les deux joueurs.',
-     pos:{p:{x:.5,y:.88},o:{x:.5,y:.2}},
-     arrows:[{f:{x:.5,y:.85},t:{x:.5,y:.32},c:'#ef4444',dash:false,lbl:'Smash corps'}],
-     tips:['Visez l\'espace entre les deux adversaires ou directement sur le corps.','Crée de la confusion : "à toi" / "à moi".','Très efficace contre une défense côte à côte trop large.'],
-     when:'Quand les adversaires sont en formation côte à côte avec un grand espace central.',
-     follow:'Suivez avec un kill au filet sur la réponse souvent défensive.'},
-    {id:'da3',title:'Alternance smash droite/gauche',level:'A',
-     desc:'Varier le placement des smashes pour épuiser les défenseurs et créer l\'ouverture.',
-     pos:{p:{x:.5,y:.88},o:{x:.5,y:.2}},
-     arrows:[{f:{x:.5,y:.85},t:{x:.1,y:.3},c:'#ef4444',dash:false,lbl:'Smash G'},{f:{x:.5,y:.85},t:{x:.9,y:.3},c:'#a855f7',dash:false,lbl:'Smash D'}],
-     tips:['Ne jamais smasher 2 fois au même endroit.','3e smash : sur le corps ou en amorti.','Le joueur de filet anticipe la réponse côté que vous avez choisi.'],
-     when:'En situation de domination, pour forcer la faute ou créer l\'ouverture finale.',
-     follow:'Dès qu\'un défenseur est hors position → kill filet côté opposé.'},
-  ],
-  defense:[
-    {id:'dd1',title:'Formation défensive (côte à côte)',level:'D',
-     desc:'Formation côte à côte pour défendre les smashes adverses efficacement.',
-     pos:{p:{x:.35,y:.82},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.35,y:.82},t:{x:.35,y:.82},c:'#3b82f6',dash:false,lbl:'Joueur G',zone:true},{f:{x:.65,y:.82},t:{x:.65,y:.82},c:'#22c55e',dash:false,lbl:'Joueur D',zone:true}],
-     tips:['Couvrez chacun votre couloir — ne vous chevauchezpas.','Dès que vous levez le coq : restez en défense.','Objectif : forcer l\'adversaire à l\'erreur.'],
-     when:'Sous pression défensive, adversaires en formation attaque avant-arrière.',
-     follow:'Dès qu\'un de vous peut driver ou bloquer court → transition attaque.'},
-    {id:'dd2',title:'Drive de défense (contre attaque)',level:'I',
-     desc:'Drive flat rapide pour contrer un smash et inverser l\'initiative.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.1,y:.5},c:'#22c55e',dash:false,lbl:'Drive ×'}],
-     tips:['Visez les couloirs latéraux — difficiles pour le joueur de filet.','Drive plat > lift : vous gardez la pression.','Si bien placé : le joueur de filet ne peut pas intercepter.'],
-     when:'Contre un smash prévisible, vous avez le temps de préparer un drive cross.',
-     follow:'Si le drive passe → transition en attaque avant-arrière.'},
-    {id:'dd3',title:'Bloc court + rotation',level:'A',
-     desc:'Bloquer le smash vers le filet puis effectuer une rotation pour prendre l\'avantage.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.4},c:'#a855f7',dash:false,lbl:'Bloc'},{f:{x:.5,y:.8},t:{x:.5,y:.65},c:'#f97316',dash:true,lbl:'Rotation'}],
-     tips:['Bloc court sur le revers adverse.','Le joueur qui bloque monte au filet.','Partenaire reste en fond pour couvrir le lift.'],
-     when:'Contre un attaquant qui monte systématiquement après son smash.',
-     follow:'Formation inversée : vous êtes maintenant en attaque.'},
-  ],
-  filet:[
-    {id:'df1',title:'Kill au filet (double)',level:'I',
-     desc:'Le joueur de filet tue le coq trop haut — coup décisif en double.',
-     pos:{p:{x:.5,y:.58},o:{x:.5,y:.42}},
-     arrows:[{f:{x:.5,y:.56},t:{x:.5,y:.46},c:'#ef4444',dash:false,lbl:'Kill'}],
-     tips:['Ne bougez pas trop — juste une action bras sec.','Visez les pieds ou l\'espace entre les adversaires.','Le kill n\'est possible que si le coq dépasse le filet.'],
-     when:'Coq adverse trop haut au filet — opportunité de finir.',
-     follow:'Point direct ou réponse défensive à gérer.'},
-    {id:'df2',title:'Jeu court au filet (ralenti)',level:'I',
-     desc:'Jouer très court et mou au filet pour forcer un lift adverse.',
-     pos:{p:{x:.5,y:.6},o:{x:.5,y:.4}},
-     arrows:[{f:{x:.5,y:.58},t:{x:.5,y:.43},c:'#f97316',dash:false,lbl:'Filet mou'}],
-     tips:['Coq qui tombe verticalement = impossible à attaquer.','Couvrez le filet : votre partenaire attend le lift en fond.','Répétez jusqu\'à ce qu\'il lève.'],
-     when:'L\'adversaire joue filet mais ne peut pas killer — continuez le duel court.',
-     follow:'Dès qu\'il lève → partenaire smash immédiat.'},
-    {id:'df3',title:'Filet croisé tendu (double)',level:'A',
-     desc:'Cross net tendu et rapide pour créer l\'angle impossible à couvrir.',
-     pos:{p:{x:.2,y:.62},o:{x:.8,y:.38}},
-     arrows:[{f:{x:.2,y:.6},t:{x:.8,y:.42},c:'#a855f7',dash:false,lbl:'Cross net'}],
-     tips:['Geste minimaliste — juste l\'impulsion du poignet.','Le joueur de filet adverse doit couvrir une grande distance.','Risqué si mal exécuté — utilisez quand vous êtes en contrôle.'],
-     when:'Vous dominez l\'échange au filet, l\'adversaire est en retard.',
-     follow:'Si le cross passe : point direct ou lift de récup à smasher.'},
-  ],
-  pattern:[
-    {id:'dp1',title:'Rotation attaque (smasher → filet)',level:'I',
-     desc:'Après un smash, le smasheur monte au filet et le joueur de filet revient en fond.',
-     pos:{p:{x:.5,y:.88},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.85},t:{x:.3,y:.28},c:'#ef4444',dash:false,lbl:'Smash'},{f:{x:.5,y:.85},t:{x:.5,y:.65},c:'#f97316',dash:true,lbl:'Monte'},{f:{x:.5,y:.65},t:{x:.5,y:.88},c:'#94a3b8',dash:true,lbl:'Recule'}],
-     tips:['Rotation fluide = pression constante sur l\'adversaire.','Communication : "je monte" dès que vous smashez.','Ne restez jamais tous les deux en fond simultanément.'],
-     when:'En phase d\'attaque soutenue pour maintenir la pression sans pause.',
-     follow:'Répétez jusqu\'à forcer la faute ou créer l\'ouverture.'},
-    {id:'dp2',title:'Transition défense → attaque',level:'I',
-     desc:'Passer de la formation côte à côte (défense) à avant-arrière (attaque) dès un drive réussi.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.55},c:'#22c55e',dash:false,lbl:'Drive'},{f:{x:.5,y:.8},t:{x:.5,y:.65},c:'#f97316',dash:true,lbl:'Transition'}],
-     tips:['Dès que votre drive passe : le joueur qui l\'a joué monte.','L\'autre reste en fond prêt à smasher.','La transition doit être instantanée — pas d\'hésitation.'],
-     when:'Après un drive ou un bloc réussi qui met l\'adversaire en difficulté.',
-     follow:'Formation avant-arrière : dominez jusqu\'au point.'},
-    {id:'dp3',title:'Troisième coup (setup smash)',level:'A',
-     desc:'Service → réponse adverse prévisible → smash puissant sur le 3e coup.',
-     pos:{p:{x:.5,y:.82},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.8},t:{x:.5,y:.38},c:'#f97316',dash:false,lbl:'① Service'},{f:{x:.5,y:.38},t:{x:.5,y:.82},c:'#3b82f6',dash:true,lbl:'② Réponse'},{f:{x:.5,y:.82},t:{x:.3,y:.22},c:'#ef4444',dash:false,lbl:'③ Smash'}],
-     tips:['Service court → vous anticipez le lift → vous smashez.','Le 3e coup est votre planification — pas une improvisation.','Placez-vous avant que le 2e coup arrive.'],
-     when:'En double, après un bon service court qui force un lift prévisible.',
-     follow:'Kill au filet de votre partenaire si le smash est défendu.'},
-  ],
-  deplac:[
-    {id:'ddep1',title:'Formation côte à côte',level:'D',
-     desc:'Position défensive standard : chaque joueur couvre sa moitié du terrain.',
-     pos:{p:{x:.35,y:.8},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.35,y:.8},t:{x:.35,y:.8},c:'#3b82f6',dash:false,lbl:'G',zone:true},{f:{x:.65,y:.8},t:{x:.65,y:.8},c:'#22c55e',dash:false,lbl:'D',zone:true}],
-     tips:['Chacun est responsable de son couloir.','Évitez les collisions sur les coups centraux — appelez !','Transition vers avant-arrière dès que vous attaquez.'],
-     when:'En situation défensive, adversaires en train d\'attaquer.',
-     follow:'Dès un drive/bloc réussi : transition en avant-arrière.'},
-    {id:'ddep2',title:'Formation avant-arrière',level:'D',
-     desc:'Position offensive : un joueur au filet, l\'autre en fond pour smasher.',
-     pos:{p:{x:.5,y:.65},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.65},t:{x:.5,y:.65},c:'#f97316',dash:false,lbl:'Filet',zone:true},{f:{x:.5,y:.88},t:{x:.5,y:.88},c:'#22c55e',dash:false,lbl:'Fond',zone:true}],
-     tips:['Joueur de filet : actif, tuez tout ce qui passe haut.','Joueur de fond : smashez fort et varié.','Rotation si l\'adversaire drive en couloir.'],
-     when:'En phase d\'attaque — le coq adverse est en l\'air et prévisible.',
-     follow:'Maintenir la pression jusqu\'au point ou jusqu\'à la rotation.'},
-    {id:'ddep3',title:'Rotation d\'urgence',level:'A',
-     desc:'Quand le schéma change brutalement, rotation fluide pour ne pas laisser de zone découverte.',
-     pos:{p:{x:.5,y:.7},o:{x:.5,y:.15}},
-     arrows:[{f:{x:.5,y:.68},t:{x:.5,y:.85},c:'#94a3b8',dash:true,lbl:'← Recule'},{f:{x:.5,y:.85},t:{x:.5,y:.65},c:'#f97316',dash:true,lbl:'Monte →'}],
-     tips:['La rotation doit se faire en 1 ou 2 pas maximum.','Communication verbale = aucune hésitation.','Entraînez les rotations à l\'échauffement.'],
-     when:'Drive adverse qui traverse le filet, ou smash depuis un mauvais angle — rotation immédiate.',
-     follow:'Nouvelle formation adaptée à la situation.'},
-  ],
-}
+/* ═══════════════════════════════════════════
+   APP STATE
+   ═══════════════════════════════════════════ */
+let mode='s', cat='service', selId=null;
+let editMode=false, arrowColor='#ef4444', drawStart=null, drag=null;
+let cP={x:.5,y:.75}, cO={x:.5,y:.25};
+let cArrows=[], arrowSeq=0;
+
+const getDB=()=>DB[mode];
+const getTactics=()=>(getDB()[cat])||[];
+const findTactic=id=>{for(const a of Object.values(getDB())){const t=a.find(x=>x.id===id);if(t)return t;}};
+
+/* ═══════════════════════════════════════════
+   SVG HELPERS
+   ═══════════════════════════════════════════ */
+const NS='http://www.w3.org/2000/svg';
+const el=(tag,attrs,parent)=>{
+  const e=document.createElementNS(NS,tag);
+  for(const[k,v] of Object.entries(attrs)) e.setAttribute(k,v);
+  if(parent) parent.appendChild(e);
+  return e;
 };
 
-let mode='singles', cat='service', sel=null;
-
-function setMode(m){
-  mode=m;
-  sel=null;
-  document.getElementById('modeS').className=m==='singles'?'active':'';
-  document.getElementById('modeD').className=m==='doubles'?'active':'';
-  render();
-}
-
-function setCat(c){
-  cat=c;
-  sel=null;
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('cat-'+c).classList.add('active');
-  render();
-}
-
-function selectT(id){
-  sel=id;
-  renderList();
-  const t=findT(id);
-  drawCourt(t);
-  renderDetail(t);
-}
-
-function findT(id){
-  const data=DB[mode];
-  for(const arr of Object.values(data)){
-    const t=arr.find(x=>x.id===id);
-    if(t) return t;
+function drawArrow(svg,from,to,color,dashed,label){
+  const f=px(from.x,from.y), t=px(to.x,to.y);
+  const dx=t.x-f.x, dy=t.y-f.y, len=Math.hypot(dx,dy)||1;
+  const ux=dx/len, uy=dy/len, hs=9;
+  el('line',{x1:f.x,y1:f.y,x2:t.x-ux*hs,y2:t.y-uy*hs,
+    stroke:color,'stroke-width':'2.2',
+    'stroke-dasharray':dashed?'7,4':'none',opacity:.92},svg);
+  el('polygon',{
+    points:`${t.x},${t.y} ${t.x-uy*5-ux*hs},${t.y+ux*5-uy*hs} ${t.x+uy*5-ux*hs},${t.y-ux*5-uy*hs}`,
+    fill:color,opacity:.92},svg);
+  if(label){
+    const mx=(f.x+t.x)/2, my=(f.y+t.y)/2;
+    const e2=el('text',{x:mx+uy*12,y:my-ux*12,'text-anchor':'middle',
+      fill:color,'font-size':'8','font-family':'sans-serif','font-weight':'600',opacity:.9},svg);
+    e2.textContent=label;
   }
 }
 
-function render(){
-  renderCats();
-  renderList();
-  drawCourt(null);
-  renderDetail(null);
-  document.getElementById('legend').innerHTML=`
-    <div class="li"><div class="ld" style="background:#f97316"></div> Vous</div>
-    <div class="li"><div class="ld" style="background:#3b82f6"></div> Adversaire</div>`;
+function drawZone(svg,pos,color,label){
+  const p=px(pos.x,pos.y);
+  el('circle',{cx:p.x,cy:p.y,r:22,fill:color,opacity:.1},svg);
+  el('circle',{cx:p.x,cy:p.y,r:22,fill:'none',stroke:color,'stroke-width':'1.5',
+    'stroke-dasharray':'4,3',opacity:.6},svg);
+  if(label){
+    const e=el('text',{x:p.x,y:p.y+1,'text-anchor':'middle','dominant-baseline':'middle',
+      fill:color,'font-size':'9','font-family':'sans-serif','font-weight':'bold'},svg);
+    e.textContent=label;
+  }
 }
 
+function drawPlayer(svg,pos,color,letter){
+  const p=px(pos.x,pos.y);
+  el('circle',{cx:p.x+2,cy:p.y+2,r:12,fill:'rgba(0,0,0,.4)'},svg);
+  el('circle',{cx:p.x,cy:p.y,r:12,fill:color},svg);
+  const t=el('text',{x:p.x,y:p.y+1,'text-anchor':'middle','dominant-baseline':'middle',
+    fill:'#fff','font-size':'10','font-weight':'700'},svg);
+  t.textContent=letter;
+}
+
+/* ═══════════════════════════════════════════
+   COURT DRAW
+   ═══════════════════════════════════════════ */
+function buildCourt(tactic){
+  const svg=document.getElementById('court');
+  while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const {W,H,ML,MT,MR,MB,CW,CH,NY,SSL,SW,SO,L,R,T,B,CX}=G;
+  const sslT=NY-SSL, sslB=NY+SSL;
+  const add=(tag,a)=>el(tag,a,svg);
+  const line=(x1,y1,x2,y2,s,sw,d='none')=>add('line',{x1,y1,x2,y2,stroke:s,'stroke-width':sw,'stroke-dasharray':d});
+  const rect=(x,y,w,h,f,rx=0,s='none',sw='0')=>{
+    const r=add('rect',{x,y,width:w,height:h,fill:f,'stroke-width':sw});
+    if(rx) r.setAttribute('rx',rx);
+    if(s!=='none') r.setAttribute('stroke',s);
+    return r;
+  };
+  const txt=(x,y,t,f,sz,a='middle')=>{const e=add('text',{x,y,'text-anchor':a,fill:f,'font-size':sz,'font-family':'sans-serif'});e.textContent=t;return e;};
+
+  // Background layers
+  rect(0,0,W,H,'#07101e');
+  rect(ML,MT,CW,CH,'#111f38',2);
+  rect(L,T,SW,CH,'#16284a',2);
+  rect(ML,MT,SO,CH,'rgba(0,0,0,.4)');
+  rect(R,MT,SO,CH,'rgba(0,0,0,.4)');
+
+  // Court lines
+  rect(ML,MT,CW,CH,'none',2,'#1e3050','1');
+  rect(L,T,SW,CH,'none',0,'#3a6a9e','2');
+
+  // Short service lines
+  line(L,sslT,R,sslT,'#3a6a9e','1.5','5,3');
+  line(L,sslB,R,sslB,'#3a6a9e','1.5','5,3');
+
+  // Center lines (SSL to baseline only)
+  line(CX,T,CX,sslT,'#2a4a72','1','4,4');
+  line(CX,sslB,CX,B,'#2a4a72','1','4,4');
+
+  // Net
+  line(ML,NY,ML+CW,NY,'#4a6a8a','1');
+  line(L,NY,R,NY,'#c8e0ff','3');
+  add('circle',{cx:L,cy:NY,r:3,fill:'#8aa8cc'});
+  add('circle',{cx:R,cy:NY,r:3,fill:'#8aa8cc'});
+
+  // Labels
+  txt(CX,T+13,'ADVERSAIRE','#243050','8.5');
+  txt(CX,B-5,'VOUS','#243050','8.5');
+  txt(CX,NY-6,'FILET','#304868','7.5');
+
+  // Tactic content
+  const useP=editMode?cP:(tactic?.pos?.p||{x:.5,y:.75});
+  const useO=editMode?cO:(tactic?.pos?.o||{x:.5,y:.25});
+  const arrows=editMode?cArrows:((tactic?.arrows)||[]);
+
+  arrows.forEach(a=>{
+    if(a.z) drawZone(svg,a.f,a.c,a.l);
+    else drawArrow(svg,a.f,a.t,a.c,a.d,a.l);
+  });
+
+  drawPlayer(svg,useO,'#3b82f6','A');
+  drawPlayer(svg,useP,'#f97316','V');
+
+  // Draw preview dot
+  if(editMode && drawStart){
+    const p=px(drawStart.x,drawStart.y);
+    add('circle',{cx:p.x,cy:p.y,r:6,fill:arrowColor,opacity:.8});
+  }
+
+  updateLegend(tactic);
+}
+
+function updateLegend(tactic){
+  const el=document.getElementById('legend');
+  const items=[
+    `<div class="li"><div class="ld" style="background:#f97316"></div>Vous (V)</div>`,
+    `<div class="li"><div class="ld" style="background:#3b82f6"></div>Adversaire (A)</div>`,
+  ];
+  if(!editMode && tactic){
+    const colors=[...new Set((tactic.arrows||[]).filter(a=>!a.z).map(a=>a.c))];
+    if(colors[0]) items.push(`<div class="li"><div class="ll" style="background:${colors[0]}"></div>Coup 1</div>`);
+    if(colors[1]) items.push(`<div class="li"><div class="ll" style="background:${colors[1]}"></div>Coup 2</div>`);
+    if(colors[2]) items.push(`<div class="li"><div class="ll" style="background:${colors[2]}"></div>Coup 3</div>`);
+    if((tactic.arrows||[]).some(a=>a.z)) items.push(`<div class="li"><div class="ld" style="background:#22c55e;opacity:.5"></div>Zone</div>`);
+  }
+  if(editMode) items.push(`<div class="li" style="color:var(--accent);font-weight:600">✏️ Édition libre</div>`);
+  el.innerHTML=items.join('');
+}
+
+/* ═══════════════════════════════════════════
+   UI RENDER
+   ═══════════════════════════════════════════ */
 function renderCats(){
-  const el=document.getElementById('catList');
-  el.innerHTML=CATS.map(c=>`
-    <button class="cat-btn ${cat===c.id?'active':''}" id="cat-${c.id}" onclick="setCat('${c.id}')">
-      <span class="ic">${c.icon}</span>${c.label}
-    </button>`).join('');
+  document.getElementById('cats').innerHTML=CATS
+    .filter(c=>!c.so||(mode==='s'))
+    .map(c=>`<button class="cat ${cat===c.id?'on':''}" id="cat-${c.id}"
+       onclick="setCat('${c.id}')" aria-pressed="${cat===c.id}">
+       <span class="ic">${c.ic}</span>${c.label}</button>`).join('');
 }
 
 function renderList(){
-  const tactics=(DB[mode][cat])||[];
-  const el=document.getElementById('tacticList');
-  const lvl={D:'Débutant',I:'Intermédiaire',A:'Avancé'};
-  const cls={D:'bd',I:'bi',A:'ba'};
-  el.innerHTML=tactics.map(t=>`
-    <div class="tc ${sel===t.id?'active':''}" onclick="selectT('${t.id}')">
-      <div class="badge ${cls[t.level]}">${lvl[t.level]}</div>
-      <h3>${t.title}</h3>
-      <p>${t.desc}</p>
-    </div>`).join('');
+  const lv={D:'Débutant',I:'Intermédiaire',A:'Avancé'};
+  const t=getTactics();
+  document.getElementById('tlist').innerHTML=t.length
+    ? t.map(x=>`<div class="tc ${selId===x.id?'on':''}" onclick="selectT('${x.id}')"
+        tabindex="0" role="button"
+        onkeydown="if(event.key==='Enter')selectT('${x.id}')">
+        <div class="lv l${x.level}">${lv[x.level]}</div>
+        <h3>${x.title}</h3><p>${x.desc}</p></div>`).join('')
+    : '<p style="padding:14px;color:var(--muted);font-size:.8rem">Aucune tactique pour ce mode.</p>';
 }
 
 function renderDetail(t){
-  const el=document.getElementById('detail');
-  if(!t){
-    el.innerHTML='<div class="empty"><div class="big">🏸</div>Sélectionnez une tactique pour voir les détails et la visualisation sur le terrain</div>';
-    return;
-  }
-  const lvl={D:'Débutant',I:'Intermédiaire',A:'Avancé'};
-  const cls={D:'bd',I:'bi',A:'ba'};
-  el.innerHTML=`
-    <div class="badge ${cls[t.level]}" style="margin-bottom:10px">${lvl[t.level]}</div>
+  const d=document.getElementById('detail');
+  if(!t){d.innerHTML='<div class="empty"><div class="empty-i">🏸</div>Choisissez une tactique dans la liste</div>';return;}
+  const lv={D:'Débutant',I:'Intermédiaire',A:'Avancé'};
+  d.innerHTML=`
+    <div class="lv l${t.level}" style="margin-bottom:9px">${lv[t.level]}</div>
     <h2>${t.title}</h2>
-    <p class="detail-desc">${t.desc}</p>
-    <div class="dsec">
-      <h4>Conseils techniques</h4>
-      ${t.tips.map(tip=>`<div class="tip"><div class="tipdot"></div><span>${tip}</span></div>`).join('')}
+    <p class="ddesc">${t.desc}</p>
+    <div class="dsec"><h4>⚙️ Technique</h4>
+      ${t.tips.map(tip=>`<div class="tip"><div class="td"></div><span>${tip}</span></div>`).join('')}
     </div>
-    <div class="dsec">
-      <h4>Quand utiliser</h4>
-      <div class="box box-o">${t.when}</div>
-    </div>
-    <div class="dsec">
-      <h4>Suite recommandée</h4>
-      <div class="box box-b">${t.follow}</div>
-    </div>`;
+    <div class="dsec"><h4>🎯 Quand utiliser</h4><div class="box bo">${t.when}</div></div>
+    <div class="dsec"><h4>⏭ Suite recommandée</h4><div class="box bb">${t.follow}</div></div>`;
+  d.scrollTop=0;
 }
 
-function drawCourt(t){
-  const svg=document.getElementById('courtSvg');
-  const {w,h,ml,mt,ch,cw,netY,ssl,sw,so,left,right,top,bot}=C;
-  const cx=(left+right)/2;
-  const sslTop=netY-ssl, sslBottom=netY+ssl;
+/* ═══════════════════════════════════════════
+   INTERACTIVE COURT
+   ═══════════════════════════════════════════ */
+function getSVGPt(e){
+  const svg=document.getElementById('court');
+  const pt=svg.createSVGPoint();
+  const src=e.touches?e.touches[0]:(e.changedTouches||[e])[0];
+  pt.x=src.clientX; pt.y=src.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
 
-  let s=`
-    <rect width="${w}" height="${h}" fill="#0f1f3d"/>
-    <rect x="${ml}" y="${top}" width="${cw}" height="${ch}" fill="#162a4a" rx="2"/>
-    <rect x="${left}" y="${top}" width="${sw}" height="${ch}" fill="#1a3558"/>
-    <!-- alley shade -->
-    <rect x="${ml}" y="${top}" width="${so}" height="${ch}" fill="#0f1f3d" opacity=".5"/>
-    <rect x="${right}" y="${top}" width="${so}" height="${ch}" fill="#0f1f3d" opacity=".5"/>
-    <!-- back lines -->
-    <rect x="${ml}" y="${top}" width="${cw}" height="${ch}" fill="none" stroke="#2a4a70" stroke-width="1.2"/>
-    <!-- singles boundary -->
-    <rect x="${left}" y="${top}" width="${sw}" height="${ch}" fill="none" stroke="#4a80c4" stroke-width="2"/>
-    <!-- short service lines -->
-    <line x1="${left}" y1="${sslTop}" x2="${right}" y2="${sslTop}" stroke="#4a80c4" stroke-width="1.5" stroke-dasharray="5,3"/>
-    <line x1="${left}" y1="${sslBottom}" x2="${right}" y2="${sslBottom}" stroke="#4a80c4" stroke-width="1.5" stroke-dasharray="5,3"/>
-    <!-- center lines (from SSL to back) -->
-    <line x1="${cx}" y1="${top}" x2="${cx}" y2="${sslTop}" stroke="#3a6090" stroke-width="1" stroke-dasharray="3,4"/>
-    <line x1="${cx}" y1="${sslBottom}" x2="${cx}" y2="${bot}" stroke="#3a6090" stroke-width="1" stroke-dasharray="3,4"/>
-    <!-- net -->
-    <line x1="${ml-2}" y1="${netY}" x2="${ml+cw+2}" y2="${netY}" stroke="#c0cfe0" stroke-width="1"/>
-    <line x1="${left}" y1="${netY}" x2="${right}" y2="${netY}" stroke="#f0f6ff" stroke-width="3"/>
-    <circle cx="${left}" cy="${netY}" r="3" fill="#c0cfe0"/>
-    <circle cx="${right}" cy="${netY}" r="3" fill="#c0cfe0"/>
-    <!-- labels -->
-    <text x="${cx}" y="${top+14}" text-anchor="middle" fill="#334a66" font-size="9" font-family="sans-serif">ADVERSAIRE</text>
-    <text x="${cx}" y="${bot-5}" text-anchor="middle" fill="#334a66" font-size="9" font-family="sans-serif">VOUS</text>
-    <text x="${cx}" y="${netY-5}" text-anchor="middle" fill="#4a6a90" font-size="8" font-family="sans-serif">FILET</text>`;
-
-  if(t){
-    // arrows
-    (t.arrows||[]).forEach((a,i)=>{
-      if(a.zone){
-        const p=px(a.f.x,a.f.y);
-        s+=`<circle cx="${p.x}" cy="${p.y}" r="20" fill="${a.c}" opacity=".15"/>
-            <circle cx="${p.x}" cy="${p.y}" r="20" fill="none" stroke="${a.c}" stroke-width="1.5" stroke-dasharray="4,3" opacity=".7"/>`;
-        if(a.lbl) s+=`<text x="${p.x}" y="${p.y+1}" text-anchor="middle" dominant-baseline="middle" fill="${a.c}" font-size="8" font-weight="bold">${a.lbl}</text>`;
-        return;
-      }
-      const f=px(a.f.x,a.f.y), to=px(a.t.x,a.t.y);
-      const dx=to.x-f.x, dy=to.y-f.y;
-      const len=Math.sqrt(dx*dx+dy*dy)||1;
-      const ux=dx/len, uy=dy/len;
-      const ex=to.x-ux*9, ey=to.y-uy*9;
-      const dash=a.dash?'6,4':'none';
-      const sw2=i===0?2.5:1.8;
-      s+=`<line x1="${f.x}" y1="${f.y}" x2="${ex}" y2="${ey}" stroke="${a.c}" stroke-width="${sw2}" stroke-dasharray="${dash}" opacity=".9"/>
-          <polygon points="${to.x},${to.y} ${to.x-uy*6-ux*9},${to.y+ux*6-uy*9} ${to.x+uy*6-ux*9},${to.y-ux*6-uy*9}" fill="${a.c}" opacity=".9"/>`;
-      if(a.lbl){
-        const mx=(f.x+to.x)/2, my=(f.y+to.y)/2;
-        const ox=uy*11, oy=-ux*11;
-        s+=`<text x="${mx+ox}" y="${my+oy}" text-anchor="middle" fill="${a.c}" font-size="8" font-family="sans-serif" font-weight="600">${a.lbl}</text>`;
-      }
-    });
-    // players
-    if(t.pos.p){const p=px(t.pos.p.x,t.pos.p.y);s+=`<circle cx="${p.x}" cy="${p.y}" r="11" fill="#f97316"/><text x="${p.x}" y="${p.y+1}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="9" font-weight="bold">V</text>`;}
-    if(t.pos.o){const p=px(t.pos.o.x,t.pos.o.y);s+=`<circle cx="${p.x}" cy="${p.y}" r="11" fill="#3b82f6"/><text x="${p.x}" y="${p.y+1}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="9" font-weight="bold">A</text>`;}
+function onCourtDown(e){
+  if(!editMode) return;
+  if(e.touches) e.preventDefault();
+  const c=getSVGPt(e);
+  const pp=px(cP.x,cP.y), op=px(cO.x,cO.y);
+  if(Math.hypot(c.x-pp.x,c.y-pp.y)<16){drag='p';return;}
+  if(Math.hypot(c.x-op.x,c.y-op.y)<16){drag='o';return;}
+  const n=normC(c.x,c.y);
+  if(!drawStart){
+    drawStart=n;
+    document.getElementById('hint').textContent='Cliquez maintenant sur la destination de la flèche…';
   } else {
-    // default
-    const p=px(.5,.7);
-    s+=`<circle cx="${p.x}" cy="${p.y}" r="11" fill="#f97316" opacity=".4"/>
-        <text x="${p.x}" y="${p.y+1}" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-size="9" font-weight="bold">V</text>
-        <text x="${cx}" y="${netY+55}" text-anchor="middle" fill="#334a66" font-size="10" font-family="sans-serif">← Choisissez une tactique</text>`;
+    const dx=n.x-drawStart.x, dy=n.y-drawStart.y;
+    if(Math.hypot(dx,dy)>0.02)
+      cArrows.push({f:{...drawStart},t:{...n},c:arrowColor,d:false,l:'',z:false,id:arrowSeq++});
+    drawStart=null;
+    document.getElementById('hint').textContent='Cliquez pour placer le départ d\'une flèche…';
   }
-
-  svg.innerHTML=s;
-
-  // legend
-  const leg=document.getElementById('legend');
-  const items=[`<div class="li"><div class="ld" style="background:#f97316"></div> Vous (V)</div>`,
-               `<div class="li"><div class="ld" style="background:#3b82f6"></div> Adversaire (A)</div>`];
-  if(t){
-    const colors=[...new Set((t.arrows||[]).filter(a=>!a.zone).map(a=>a.c))];
-    if(colors[0]) items.push(`<div class="li"><div class="ll" style="background:${colors[0]}"></div> Coup principal</div>`);
-    if(colors[1]) items.push(`<div class="li"><div class="ll" style="background:${colors[1]};opacity:.8"></div> Coup 2</div>`);
-    if((t.arrows||[]).some(a=>a.zone)) items.push(`<div class="li"><div class="ld" style="background:#22c55e;opacity:.6"></div> Zone idéale</div>`);
-  }
-  leg.innerHTML=items.join('');
+  buildCourt(findTactic(selId));
 }
 
-// init
-render();
+function onCourtMove(e){
+  if(!drag||!editMode) return;
+  if(e.touches) e.preventDefault();
+  const c=getSVGPt(e);
+  const n=normC(c.x,c.y);
+  if(drag==='p') cP=n; else cO=n;
+  buildCourt(findTactic(selId));
+}
+
+function onCourtUp(){drag=null;}
+
+const court=document.getElementById('court');
+court.addEventListener('mousedown',onCourtDown);
+court.addEventListener('touchstart',onCourtDown,{passive:false});
+document.addEventListener('mousemove',onCourtMove);
+document.addEventListener('touchmove',onCourtMove,{passive:false});
+document.addEventListener('mouseup',onCourtUp);
+document.addEventListener('touchend',onCourtUp);
+
+/* ═══════════════════════════════════════════
+   STATE ACTIONS
+   ═══════════════════════════════════════════ */
+function setMode(m){
+  mode=m; selId=null; cat='service';
+  document.getElementById('mS').className='pill'+(m==='s'?' on':'');
+  document.getElementById('mD').className='pill'+(m==='d'?' on':'');
+  fullRender();
+}
+
+function setCat(c){
+  cat=c; selId=null;
+  document.querySelectorAll('.cat').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-pressed','false');});
+  const btn=document.getElementById('cat-'+c);
+  if(btn){btn.classList.add('on');btn.setAttribute('aria-pressed','true');}
+  renderList(); buildCourt(null); renderDetail(null);
+}
+
+function selectT(id){
+  selId=id;
+  const t=findTactic(id);
+  if(!t) return;
+  if(t.pos?.p) cP={...t.pos.p};
+  if(t.pos?.o) cO={...t.pos.o};
+  if(!editMode) cArrows=[];
+  renderList(); buildCourt(t); renderDetail(t);
+}
+
+function setEdit(on){
+  editMode=on;
+  document.getElementById('bView').className='btn'+(on?'':' on');
+  document.getElementById('bEdit').className='btn'+(on?' on':'');
+  document.getElementById('editCtrl').style.display=on?'flex':'none';
+  court.style.cursor=on?'crosshair':'default';
+  const h=document.getElementById('hint');
+  if(on){
+    h.textContent='Cliquez pour placer le départ d\'une flèche…';
+    const t=findTactic(selId);
+    if(t) cArrows=(t.arrows||[]).filter(a=>!a.z).map((a,i)=>({...a,id:i}));
+    arrowSeq=cArrows.length;
+  } else {
+    h.textContent=''; drawStart=null;
+  }
+  buildCourt(findTactic(selId));
+}
+
+function resetCourt(){
+  drawStart=null; cArrows=[];
+  if(selId){const t=findTactic(selId);if(t){if(t.pos?.p)cP={...t.pos.p};if(t.pos?.o)cO={...t.pos.o};}}
+  else{cP={x:.5,y:.75};cO={x:.5,y:.25};}
+  buildCourt(findTactic(selId));
+}
+
+function setAC(elem,c){
+  arrowColor=c;
+  document.querySelectorAll('.at').forEach(a=>a.classList.remove('on'));
+  elem.classList.add('on');
+}
+
+function clearArrows(){cArrows=[];drawStart=null;buildCourt(findTactic(selId));}
+
+/* Mobile tabs */
+function mobTab(tab){
+  ['tabC','tabL','tabD'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById('sidebar').classList.remove('show');
+  document.getElementById('detail').classList.remove('show');
+  if(tab==='court') document.getElementById('tabC').classList.add('on');
+  if(tab==='list'){document.getElementById('tabL').classList.add('on');document.getElementById('sidebar').classList.add('show');}
+  if(tab==='detail'){document.getElementById('tabD').classList.add('on');document.getElementById('detail').classList.add('show');}
+}
+
+function fullRender(){
+  renderCats(); renderList(); buildCourt(null); renderDetail(null);
+}
+
+fullRender();
 </script>
 </body>
 </html>
